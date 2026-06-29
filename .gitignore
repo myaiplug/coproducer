@@ -15,3 +15,17 @@ input/reference/*
 input/batch/*
 input/album/*
 !input/**/README.txt
+
+# Virtual environments (critical to avoid huge binary bloat)
+.venv/
+.venv-*/
+venv/
+env/
+
+# Build / editable install artifacts
+*.egg-info/
+build/
+*.egg
+
+# Temporary validation / test artifacts
+logs-validate/
