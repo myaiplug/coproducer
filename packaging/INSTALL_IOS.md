@@ -1,13 +1,81 @@
-# iOS / iPhone Support
+# CoProducer v3.2 -- iOS / iPhone Support
 
-Full CoProducer analysis (librosa + heavy native DSP) has limited support directly on stock iOS due to sandboxing and lack of full CPython + native wheels.
+## Current Status
 
-Recommended approaches (in priority):
+CoProducer's full analysis pipeline (librosa, pyloudnorm, soundfile, NumPy/SciPy)
+cannot run natively on stock iOS due to:
 
-1. Analyze on desktop (Windows/macOS) using the full installer and share files via iCloud / Files / AirDrop.
-2. Use the portable Python package + a companion iOS app (Pythonista, Carnets, or a custom Swift + PythonKit build) for lightweight metadata + ffprobe style inspection.
-3. For production: run analysis on Mac (or Windows) and embed the CoProducer* tags (via Mutagen) so the rich analysis metadata travels with the file and is readable on iPhone.
+- Sandbox restrictions (no subprocess/ffmpeg access)
+- Missing native wheel builds for ARM64 iOS
+- No CPython runtime with full extension support on stock iOS
 
-The core library code remains pure-Python + well-known wheels and can be packaged for future BeeWare / Kivy-iOS or Pyto style frontends.
+## Recommended Workflow
 
-See docs/INSTALLATION.md for desktop instructions and how analysis metadata is written into the audio tags.
+### Option 1: Desktop Analysis + Mobile Review (RECOMMENDED)
+
+1. Analyze on Windows or macOS using the full desktop installer.
+2. Open the generated HTML report on iPhone via:
+   - iCloud Drive
+   - AirDrop
+   - Files app
+3. The reports are fully self-contained HTML with embedded scores, findings,
+   and recommendations. No app needed on iOS.
+
+### Option 2: Pythonista / Carnets (Lightweight Inspection)
+
+Third-party iOS Python runtimes (Pythonista, Carnets) can run a subset of
+CoProducer's analysis for basic metadata inspection:
+
+- Mutagen tag reading (format, bitrate, duration)
+- Basic ffprobe-style metadata extraction
+- Analysis tag display (if file was pre-analyzed on desktop)
+
+They **cannot** run:
+- pyloudnorm LUFS measurement
+- librosa spectral/MIR analysis
+- FFmpeg subprocess calls
+- Full TrackAnalysis pipeline
+
+### Option 3: Custom Swift + PythonKit App (Future)
+
+A native SwiftUI app wrapping PythonKit could bridge CoProducer's core
+analysis. This requires:
+
+- Python 3.11 ARM64 framework embedded in the app bundle
+- Pre-compiled wheels for NumPy, SciPy, soundfile for iOS
+- FFmpeg as a static library or framework
+- At minimum 500 MB app bundle size
+
+Not currently planned for v3.x. Desktop remains the primary platform.
+
+## Viewing Reports on iOS
+
+After desktop analysis, transfer the report folder:
+
+```
+reports/
+  html/   <-- Open these on iPhone
+  json/
+  txt/
+```
+
+The HTML reports are mobile-responsive and render well in Safari.
+
+## File Tag Metadata
+
+CoProducer writes analysis data (score, LUFS, tempo) into audio file tags.
+These tags are readable on iPhone via:
+
+- Files app > Get Info (limited)
+- Third-party tag editors (Metadatics, MP3Tag iOS alternatives)
+- The CoProducer JSON report for full detail
+
+## Summary
+
+| Capability          | Desktop (Win/Mac) | iOS Native | Pythonista |
+|---------------------|-------------------|------------|------------|
+| Full analysis       | YES               | No         | No         |
+| Tag reading         | YES               | Partial    | YES        |
+| HTML report viewing | YES               | YES        | YES        |
+| GUI interface       | YES               | No         | No         |
+| FFmpeg repairs      | YES               | No         | No         |

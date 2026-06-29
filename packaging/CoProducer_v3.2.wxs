@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CoProducer v3.2 -- Windows MSI Installer (WiX Toolset v3.14+)
+Build: candle.exe CoProducer_v3.2.wxs && light.exe -o CoProducer_v3.2.msi CoProducer_v3.2.wixobj
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+  <Product Id="*" Name="CoProducer - AI Production Assistant"
+           Language="1033" Version="3.2.0" Manufacturer="NoDAW Labs"
+           UpgradeCode="{B7E4F12A-3D5C-4E8F-9A2B-1C6D7E8F9A0B}">
+
+    <Package InstallerVersion="500" Compressed="yes"
+             InstallScope="perUser" Platform="x64"
+             Description="CoProducer v3.2 - AI Production Assistant" />
+
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Upgrade detection -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed."
+                  AllowSameVersionUpgrades="yes" />
+
+    <!-- Directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="INSTALLDIR" Name="CoProducer">
+
+          <!-- App directory -->
+          <Directory Id="APPDIR" Name="app">
+            <Directory Id="NODAWDIR" Name="nodaw">
+              <Directory Id="AUDIODIR" Name="audio" />
+              <Directory Id="COREDIR" Name="core" />
+              <Directory Id="FEATURESDIR" Name="features" />
+              <Directory Id="REPORTINGDIR" Name="reporting" />
+              <Directory Id="UTILSDIR" Name="utils" />
+              <Directory Id="UIDIR" Name="ui">
+                <Directory Id="ASSETSDIR" Name="assets">
+                  <Directory Id="ICONSDIR" Name="icons" />
+                </Directory>
+              </Directory>
+            </Directory>
+          </Directory>
+
+          <!-- Config -->
+          <Directory Id="CONFIGDIR" Name="config" />
+          <!-- Docs -->
+          <Directory Id="DOCSDIR" Name="docs" />
+          <!-- Input -->
+          <Directory Id="INPUTDIR" Name="input">
+            <Directory Id="SONGDIR" Name="song" />
+            <Directory Id="REFDIR" Name="reference" />
+            <Directory Id="BATCHDIR" Name="batch" />
+            <Directory Id="ALBUMDIR" Name="album" />
+          </Directory>
+          <!-- Packaging -->
+          <Directory Id="PACKDIR" Name="packaging" />
+          <!-- Reports (created at runtime) -->
+          <!-- Exports (created at runtime) -->
+          <!-- Logs (created at runtime) -->
+
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <!-- Files: core app -->
+    <Component Id="CORE_FILES" Guid="{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}" Directory="INSTALLDIR">
+      <File Id="DESKTOP_PY" Name="CoProducerDesktop.py" Source="..\CoProducerDesktop.py" />
+      <File Id="GUI_PY" Name="CoProducer_GUI.py" Source="..\CoProducer_GUI.py" />
+      <File Id="START_GUI" Name="START_GUI.bat" Source="..\START_GUI.bat" />
+      <File Id="RUN_BAT" Name="START_ANALYZER_PRO.bat" Source="..\START_ANALYZER_PRO.bat" />
+      <File Id="README" Name="README.md" Source="..\README.md" />
+      <File Id="CHANGELOG" Name="CHANGELOG.md" Source="..\CHANGELOG.md" />
+      <File Id="LICENSE" Name="LICENSE.txt" Source="..\LICENSE.txt" />
+      <File Id="REQUIREMENTS" Name="requirements.txt" Source="..\requirements.txt" />
+      <File Id="PYPROJECT" Name="pyproject.toml" Source="..\pyproject.toml" />
+    </Component>
+
+    <!-- Files: app/nodaw -->
+    <Component Id="NODAW_FILES" Guid="{B2C3D4E5-F6A7-8901-BCDE-F12345678901}" Directory="NODAWDIR">
+      <File Id="NODAW_INIT" Name="__init__.py" Source="..\app\nodaw\__init__.py" />
+      <File Id="NODAW_CLI" Name="cli.py" Source="..\app\nodaw\cli.py" />
+      <File Id="NODAW_CONFIG" Name="config.py" Source="..\app\nodaw\config.py" />
+    </Component>
+
+    <!-- Files: app/nodaw/core -->
+    <Component Id="CORE_MODULES" Guid="{C3D4E5F6-A7B8-9012-CDEF-123456789012}" Directory="COREDIR">
+      <File Id="ENGINE_PY" Name="engine.py" Source="..\app\nodaw\core\engine.py" />
+      <File Id="MODELS_PY" Name="models.py" Source="..\app\nodaw\core\models.py" />
+      <File Id="SCORING_PY" Name="scoring.py" Source="..\app\nodaw\core\scoring.py" />
+    </Component>
+
+    <!-- Files: app/nodaw/audio -->
+    <Component Id="AUDIO_MODULES" Guid="{D4E5F6A7-B8C9-0123-DEF1-234567890123}" Directory="AUDIODIR">
+      <File Id="ANALYZER_PY" Name="analyzer.py" Source="..\app\nodaw\audio\analyzer.py" />
+      <File Id="FFMPEG_PY" Name="ffmpeg.py" Source="..\app\nodaw\audio\ffmpeg.py" />
+      <File Id="METRICS_PY" Name="metrics.py" Source="..\app\nodaw\audio\metrics.py" />
+    </Component>
+
+    <!-- Files: app/nodaw/ui -->
+    <Component Id="UI_MODULES" Guid="{E5F6A7B8-C9D0-1234-EF12-345678901234}" Directory="UIDIR">
+      <File Id="UI_INIT" Name="__init__.py" Source="..\app\nodaw\ui\__init__.py" />
+      <File Id="THEME_PY" Name="theme.py" Source="..\app\nodaw\ui\theme.py" />
+      <File Id="COMPONENTS_PY" Name="components.py" Source="..\app\nodaw\ui\components.py" />
+      <File Id="ICONS_PY" Name="icons.py" Source="..\app\nodaw\ui\icons.py" />
+      <File Id="ANIMATIONS_PY" Name="animations.py" Source="..\app\nodaw\ui\animations.py" />
+    </Component>
+
+    <!-- Files: app/nodaw/ui/assets/icons -->
+    <Component Id="SVG_ICONS" Guid="{F6A7B8C9-D0E1-2345-EF12-345678901235}" Directory="ICONSDIR">
+      <File Id="ICON_PLUS" Name="plus.svg" Source="..\app\nodaw\ui\assets\icons\plus.svg" />
+      <File Id="ICON_CHECK" Name="check.svg" Source="..\app\nodaw\ui\assets\icons\check.svg" />
+      <File Id="ICON_ALERT" Name="alert.svg" Source="..\app\nodaw\ui\assets\icons\alert.svg" />
+      <File Id="ICON_CLOSE" Name="close.svg" Source="..\app\nodaw\ui\assets\icons\close.svg" />
+      <File Id="ICON_MUSIC" Name="music.svg" Source="..\app\nodaw\ui\assets\icons\music.svg" />
+      <File Id="ICON_STAR" Name="star.svg" Source="..\app\nodaw\ui\assets\icons\star.svg" />
+      <File Id="ICON_DASHBOARD" Name="dashboard.svg" Source="..\app\nodaw\ui\assets\icons\dashboard.svg" />
+      <File Id="ICON_REPORT" Name="report.svg" Source="..\app\nodaw\ui\assets\icons\report.svg" />
+      <File Id="ICON_COMPARE" Name="compare.svg" Source="..\app\nodaw\ui\assets\icons\compare.svg" />
+      <File Id="ICON_HISTORY" Name="history.svg" Source="..\app\nodaw\ui\assets\icons\history.svg" />
+      <File Id="ICON_DOCTOR" Name="doctor.svg" Source="..\app\nodaw\ui\assets\icons\doctor.svg" />
+      <File Id="ICON_EMPTY" Name="empty_state.svg" Source="..\app\nodaw\ui\assets\icons\empty_state.svg" />
+      <File Id="ICON_SCORE" Name="score_ring.svg" Source="..\app\nodaw\ui\assets\icons\score_ring.svg" />
+      <File Id="ICON_WAVEFORM" Name="waveform.svg" Source="..\app\nodaw\ui\assets\icons\waveform.svg" />
+      <File Id="ICON_BATCH" Name="batch.svg" Source="..\app\nodaw\ui\assets\icons\batch.svg" />
+      <File Id="ICON_EXTERNAL" Name="external.svg" Source="..\app\nodaw\ui\assets\icons\external.svg" />
+      <File Id="ICON_SPARKLE" Name="sparkle.svg" Source="..\app\nodaw\ui\assets\icons\sparkle.svg" />
+      <File Id="ICON_DOWNLOAD" Name="download.svg" Source="..\app\nodaw\ui\assets\icons\download.svg" />
+      <File Id="ICON_INFO" Name="info.svg" Source="..\app\nodaw\ui\assets\icons\info.svg" />
+      <File Id="ICON_CHEVRON_R" Name="chevron_right.svg" Source="..\app\nodaw\ui\assets\icons\chevron_right.svg" />
+      <File Id="ICON_CHEVRON_D" Name="chevron_down.svg" Source="..\app\nodaw\ui\assets\icons\chevron_down.svg" />
+    </Component>
+
+    <!-- Start menu shortcuts -->
+    <Component Id="START_MENU" Guid="{A7B8C9D0-E1F2-3456-7890-1234567890AB}" Directory="TARGETDIR">
+      <Shortcut Id="CoProducerShortcut" Directory="ProgramMenuFolder"
+                Name="CoProducer" Description="Launch CoProducer - AI Production Assistant"
+                Target="[INSTALLDIR]START_GUI.bat"
+                WorkingDirectory="INSTALLDIR" />
+      <RemoveFolder Id="RemoveProgramMenu" Directory="ProgramMenuFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\NoDAW\CoProducer"
+                     Name="installed" Type="integer" Value="1" />
+    </Component>
+
+    <!-- Feature hierarchy -->
+    <Feature Id="Complete" Title="CoProducer" Level="1"
+             Description="Complete CoProducer installation">
+      <ComponentRef Id="CORE_FILES" />
+      <ComponentRef Id="NODAW_FILES" />
+      <ComponentRef Id="CORE_MODULES" />
+      <ComponentRef Id="AUDIO_MODULES" />
+      <ComponentRef Id="UI_MODULES" />
+      <ComponentRef Id="SVG_ICONS" />
+      <ComponentRef Id="START_MENU" />
+    </Feature>
+
+    <!-- UI -->
+    <UI>
+      <UIRef Id="WixUI_Minimal" />
+      <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+    </UI>
+
+    <!-- Launch after install -->
+    <CustomAction Id="LaunchApp" Directory="INSTALLDIR"
+                  ExeCommand="[INSTALLDIR]START_GUI.bat"
+                  Return="asyncNoWait" />
+    <InstallExecuteSequence>
+      <Custom Action="LaunchApp" After="InstallFinalize">NOT Installed AND NOT REMOVE</Custom>
+    </InstallExecuteSequence>
+
+  </Product>
+</Wix>

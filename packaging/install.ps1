@@ -80,6 +80,11 @@ Log "Upgrading pip..."
 $ReqFile = Join-Path $Root "requirements.txt"
 Log "Installing from $ReqFile (this may take several minutes)..."
 & $VenvPython -m pip install -r $ReqFile 2>&1 | Tee-Object -Variable pipOut | Out-Null
+
+# Install PySide6 for the desktop GUI (Phase 3.2+)
+Log "Installing PySide6 desktop GUI framework..."
+& $VenvPython -m pip install PySide6 2>&1 | Out-Null
+Log "PySide6 installed."
 Add-Content -Path $LogFile -Value $pipOut -Encoding UTF8
 
 Log "Installing local package in editable mode..."

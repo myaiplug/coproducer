@@ -1,8 +1,12 @@
-# CoProducer Core Analyzer v3.1
+# CoProducer™
 
-**CoProducer** brings the proven NoDAW measurement engine into a modern, dependency-rich professional analyzer.
+**AI Production Assistant**
 
-Python 3.11 locked runtime. Real measurements using pyloudnorm (LUFS), librosa (MIR), mutagen (metadata + analysis embedding), + ffprobe.
+CoProducer reviews, critiques, and helps improve your mixes using traceable measurements.
+
+The analyzer engine is frozen and production-grade. The desktop application is the presentation layer.
+
+Python 3.11 locked. PySide6 desktop UI.
 
 NoDAW PRO is a Windows-first audio engineering analyzer powered by Python and
 FFmpeg. It produces measurable, inspectable reports without requiring a DAW or
@@ -27,12 +31,11 @@ commands, color-coded scores, and SVG charts.
 
 ## Quick start
 
-1. Install Python 3.10 or newer.
-2. Install FFmpeg and ensure ffmpeg and ffprobe are on PATH.
-3. Place a song in input/song.
-4. Optionally add a reference under input/reference, batch material under
-   input/batch, or album tracks under input/album.
-5. Double-click START_ANALYZER_PRO.bat and choose an operation.
+1. Python 3.11 + FFmpeg.
+2. `cd packaging && .\install.ps1`
+3. `START_GUI.bat` (recommended) or `START_ANALYZER_PRO.bat`
+
+CoProducer is positioned as an **AI Production Assistant**, not a raw meter. The desktop experience leads with conclusions and actionable recommendations.
 
 For scripted use:
 

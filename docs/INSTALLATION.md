@@ -78,6 +78,20 @@ Essentia is powerful but deliberately **not** auto-installed. To enable Advanced
 
 See requirements.txt for comments.
 
+## Desktop GUI (PySide6)
+
+The premium desktop app requires:
+
+    pip install PySide6
+
+Launch with:
+
+    python CoProducerDesktop.py
+    # or
+    START_GUI.bat
+
+The old Tkinter interface (CoProducer_GUI.py) is kept only as an internal testing tool.
+
 ## Metadata writing notes
 
 CoProducer tags (score, LUFS, tempo, version) are written using Mutagen.
