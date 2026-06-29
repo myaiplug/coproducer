@@ -78,3 +78,11 @@ Essentia is powerful but deliberately **not** auto-installed. To enable Advanced
 
 See requirements.txt for comments.
 
+## Metadata writing notes
+
+CoProducer tags (score, LUFS, tempo, version) are written using Mutagen.
+- Strong support: MP3, FLAC, M4A, AIFF, Opus
+- Limited: WAV (no standard ID3 container). The rich data is always available in the sidecar JSON/HTML reports.
+
+All original tags are preserved when possible.
+

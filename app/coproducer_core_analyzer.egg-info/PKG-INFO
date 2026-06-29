@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: coproducer-core-analyzer
+Version: 3.1.0
+Summary: CoProducer Core Analyzer - professional audio analysis with traceable metrics (pyloudnorm + librosa + mutagen + ffprobe)
+Requires-Python: ==3.11.*
+License-File: LICENSE.txt
+Requires-Dist: numpy<2.0.0,>=1.24.0
+Requires-Dist: scipy>=1.10.0
+Requires-Dist: soundfile>=0.12.1
+Requires-Dist: audioread>=3.0.0
+Requires-Dist: librosa<0.11.0,>=0.10.0
+Requires-Dist: pyloudnorm>=0.1.1
+Requires-Dist: mutagen>=1.47.0
+Dynamic: license-file

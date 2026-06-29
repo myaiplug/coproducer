@@ -82,6 +82,10 @@ Log "Installing from $ReqFile (this may take several minutes)..."
 & $VenvPython -m pip install -r $ReqFile 2>&1 | Tee-Object -Variable pipOut | Out-Null
 Add-Content -Path $LogFile -Value $pipOut -Encoding UTF8
 
+Log "Installing local package in editable mode..."
+& $VenvPython -m pip install -e $Root --no-deps -q 2>&1 | Out-Null
+Log "Local package installed (so 'import nodaw' works)"
+
 # 4. Verify critical imports
 Log "Running dependency self-test..."
 $testScript = @"

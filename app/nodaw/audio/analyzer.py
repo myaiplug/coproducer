@@ -109,43 +109,56 @@ def load_audio(path: Path, sr: int = 44100, mono: bool = True) -> Tuple[np.ndarr
 
 
 def compute_loudness_pyloudnorm(y: np.ndarray, sr: int) -> LoudnessMetrics:
-    """Use pyloudnorm (ITU-R BS.1770) for accurate integrated + true peak."""
+    """Use pyloudnorm (ITU-R BS.1770) for accurate integrated + true peak.
+    Includes fallback for edge cases (short tones, very quiet, silence).
+    """
+    if len(y) < sr // 4:  # very short clip
+        # Use simple stats
+        if len(y) == 0:
+            return LoudnessMetrics(None, None, None, None)
+        pk = 20 * math.log10(max(np.max(np.abs(y)), 1e-12))
+        rms = 20 * math.log10(max(np.sqrt(np.mean(y**2)), 1e-12))
+        return LoudnessMetrics(None, None, round(pk, 2), None)
+
     try:
-        meter = pyln.Meter(sr)  # BS.1770
+        meter = pyln.Meter(sr)
         integrated = meter.integrated_loudness(y)
-        # True peak approx via oversampled (pyloudnorm has peak metering option)
-        peak = pyln.normalize.peak(y)  # simple peak, use for dBFS
-        # For true peak we approximate with high quality resample or use the meter
-        loudness_range = None
+        lra = None
         try:
-            loudness_range = meter.loudness_range(y)
+            lra = meter.loudness_range(y)
         except Exception:
             pass
 
-        true_peak = None
-        # pyloudnorm does not do true-peak by default in all versions; approximate:
-        # Use a simple high-res peak or note that full true-peak uses 4x oversampling.
-        # For practicality compute max abs after light oversampling simulation
-        if len(y) > 0:
-            true_peak = 20 * math.log10(max(np.max(np.abs(y)), 1e-12))
+        # Robust peak
+        peak = float(np.max(np.abs(y)))
+        pk_dbfs = 20 * math.log10(max(peak, 1e-12))
+
+        # Approximate true peak (simple for now; real TP uses oversampling)
+        true_pk = round(pk_dbfs, 2)
+
+        integ = round(integrated, 2) if integrated is not None and math.isfinite(integrated) else None
 
         return LoudnessMetrics(
-            integrated_lufs=round(integrated, 2) if integrated is not None else None,
-            loudness_range_lu=round(loudness_range, 2) if loudness_range is not None else None,
-            true_peak_dbtp=round(true_peak, 2) if true_peak is not None else None,
+            integrated_lufs=integ,
+            loudness_range_lu=round(lra, 2) if lra is not None and math.isfinite(lra) else None,
+            true_peak_dbtp=true_pk,
             threshold_lufs=None,
         )
     except Exception:
-        # Fallback to zeros
-        return LoudnessMetrics(None, None, None, None)
+        # Absolute fallback using numpy
+        if len(y) == 0:
+            return LoudnessMetrics(None, None, None, None)
+        pk = 20 * math.log10(max(np.max(np.abs(y)), 1e-12))
+        rms = 20 * math.log10(max(np.sqrt(np.mean(y**2)), 1e-12))
+        return LoudnessMetrics(None, None, round(pk, 2), None)
 
 
 def compute_technical_faults(y: np.ndarray, sr: int) -> Dict[str, Any]:
     """Clipping, DC, silence, phase correlation using numpy."""
     results: Dict[str, Any] = {}
 
-    # Clipping count (full scale)
-    clipped = int(np.sum(np.abs(y) >= 0.999))
+    # Clipping count (near full scale, allows for dither)
+    clipped = int(np.sum(np.abs(y) >= 0.998))
     results["clipped_samples"] = clipped
     results["clipped_ratio"] = round(clipped / max(1, len(y)), 6)
 
@@ -248,32 +261,42 @@ def read_mutagen_tags(path: Path) -> Dict[str, str]:
 
 
 def embed_analysis_metadata(path: Path, analysis: Dict[str, Any]) -> bool:
-    """Embed CoProducer / AI analysis results into the file tags (Mutagen)."""
+    """Embed CoProducer / AI analysis results into the file tags (Mutagen).
+    Works best for MP3/FLAC/M4A/AIFF. WAV has limited support (documented).
+    """
     try:
-        # Use easy interface when possible, fall back
-        try:
-            audio = EasyID3(str(path))
-        except Exception:
-            audio = MutagenFile(str(path), easy=True)
-            if audio is None:
+        audio = MutagenFile(str(path), easy=True)
+        if audio is None:
+            # Try forcing ID3 for mp3-like
+            try:
+                audio = EasyID3(str(path))
+            except Exception:
                 return False
+        if audio is None:
+            return False
 
-        # Musical + analysis tags (safe keys)
         score = analysis.get("score")
         if score is not None:
-            audio["comment"] = audio.get("comment", [""]) [0] + f" | CoProducerScore={score}"
+            existing = audio.get("comment", [""])[0] if "comment" in audio else ""
+            audio["comment"] = (existing + f" | CoProducerScore={int(score)}").strip(" |")
             audio["CoProducerScore"] = str(int(score))
+
         lufs = analysis.get("metrics", {}).get("loudness", {}).get("integrated_lufs")
         if lufs is not None:
-            audio["CoProducerLUFS"] = f"{lufs:.1f}"
-        tempo = analysis.get("features", {}).get("librosa", {}).get("tempo_bpm")
+            audio["CoProducerLUFS"] = f"{float(lufs):.1f}"
+
+        feats = analysis.get("extra", {}).get("librosa", {}) if isinstance(analysis.get("extra"), dict) else {}
+        tempo = feats.get("tempo_bpm")
         if tempo:
             audio["CoProducerTempo"] = str(tempo)
-        # Add more as needed
+
+        # Always try to persist version info
+        audio["CoProducerVersion"] = "3.1.0"
 
         audio.save()
         return True
-    except Exception:
+    except Exception as e:
+        # WAV and some containers often fail silently here
         return False
 
 

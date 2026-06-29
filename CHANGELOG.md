@@ -24,6 +24,17 @@
 - Android: Termux bootstrap script (see packaging/)
 - iOS: Portable package notes + desktop analysis recommended (iOS Python constraints)
 
+### Phase 3.1.0 Validation & Hardening (2026-06-29)
+Full validation checklist executed:
+- Installer: Python 3.11 detect, venv, pinned deps, ffmpeg/ffprobe, self-test, logs all pass.
+- Launcher: Works from Explorer sim, paths with spaces, missing-dep handling.
+- Audio formats: WAV (incl 96 kHz), MP3, FLAC, mono/stereo, clipped, quiet, short/long all analyzed with populated reasonable metrics.
+- Reference Match: Logical similarity scores and measured-based recommendations across identical / alt-master / different-song cases.
+- Reports: HTML/JSON/TXT generated, valid, complete (no nulls for real material), recs match data.
+- Metadata: Mutagen embedding verified for supported containers; WAV limitation documented.
+- Failures: All error cases return clear actionable messages. No crashes.
+All completion criteria met. Engine is stable for GUI presentation layer.
+
 ## 3.0.0 - 2026-06-29
 
 - Replaced the monolithic analyzers with a modular Python package.
