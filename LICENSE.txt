@@ -1,0 +1,19 @@
+NoDAW Audio Quality Analyzer PRO v3.0
+Copyright (c) 2026 NoDAW. All rights reserved.
+
+This software and its documentation are proprietary. You may install and use
+the software only under the terms supplied with your purchase or written
+authorization from NoDAW.
+
+You may not redistribute, sublicense, sell, publish, reverse engineer, or
+remove proprietary notices from the software except where applicable law
+expressly permits those actions.
+
+FFmpeg and Python are separate projects distributed under their own licenses.
+They are not included in the source-portable package unless a distributor
+explicitly supplies compliant runtime bundles and the corresponding notices.
+
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM
+EXTENT PERMITTED BY LAW, NODAW IS NOT LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL,
+OR CONSEQUENTIAL DAMAGES ARISING FROM USE OF THE SOFTWARE.
+

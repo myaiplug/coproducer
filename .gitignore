@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+dist/
+development/
+logs/*.log
+reports/html/*.html
+reports/json/*.json
+reports/txt/*.txt
+reports/csv/*.csv
+reports/history/*.jsonl
+exports/previews/
+exports/repairs/*.bat
+input/song/*
+input/reference/*
+input/batch/*
+input/album/*
+!input/**/README.txt

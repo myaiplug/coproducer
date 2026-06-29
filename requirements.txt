@@ -1,0 +1,25 @@
+# CoProducer Core Analyzer - Pinned dependencies for Python 3.11
+# Target runtime: Python 3.11 (locked; do not use 3.12 for Essentia compatibility)
+# Core: ffmpeg/ffprobe (external) + these Python packages
+
+numpy>=1.24.0,<2.0.0
+scipy>=1.10.0
+soundfile>=0.12.1
+audioread>=3.0.0
+librosa>=0.10.0,<0.11.0
+pyloudnorm>=0.1.1
+mutagen>=1.47.0
+
+# Optional / Advanced (not required for base install or first boot)
+# Install manually for "Advanced MIR Mode":
+#   pip install essentia
+# Essentia provides additional high-level MIR descriptors but has
+# known friction on some Windows + newer Python combos.
+
+# Development / test only (not runtime)
+# pytest
+# mypy
+
+# Note: All scores and metrics are computed from measured values using
+# the above libraries + ffprobe. No simulated/AI hallucinated scores.
+
