@@ -24,7 +24,7 @@ from typing import Any, Optional
 import subprocess
 
 from PySide6.QtCore import Qt, QThread, Signal, QObject
-from PySide6.QtGui import QColor, QFont, QPalette
+from PySide6.QtGui import QColor, QFont, QIcon, QPalette
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel,
@@ -131,6 +131,9 @@ class CoProducerWindow(QMainWindow):
         self.resize(1400, 900)
         self.setMinimumSize(1100, 700)
 
+        icon_path = PROJECT_ROOT / "assets" / "icon.png"
+        if icon_path.is_file():
+            self.setWindowIcon(QIcon(str(icon_path)))
         self._apply_theme()
         self.recent = RecentManager(PROJECT_ROOT / "reports" / "recent.json")
 

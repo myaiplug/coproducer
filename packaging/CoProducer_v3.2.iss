@@ -5,6 +5,7 @@
 #define MyAppName "CoProducer - AI Production Assistant"
 #define MyAppShortName "CoProducer"
 #define MyAppVersion "3.2.0"
+#define MyAppExeName "START_GUI.bat"
 #define MyAppPublisher "NoDAW Labs"
 #define MyAppURL "https://nodaw.ai/coproducer"
 #define MyAppExeName "START_GUI.bat"
@@ -26,8 +27,8 @@ ArchitecturesInstallIn64BitMode=x64compatible
 WizardStyle=modern
 WizardSizePercent=100
 DisableProgramGroupPage=yes
-SetupIconFile=..\assets\icon.ico
-UninstallDisplayIcon={app}\assets\icon.ico
+SetupIconFile=..\assets\icon.png
+UninstallDisplayIcon={app}\assets\icon.png
 ChangesEnvironment=yes
 
 [Languages]
@@ -41,6 +42,7 @@ Name: "venv"; Description: "Create Python virtual environment (recommended)"; Gr
 ; Core application
 Source: "..\app\*"; DestDir: "{app}\app"; Excludes: "__pycache__\*,*.pyc,*.pyo"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\assets\icon.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "..\config\*"; DestDir: "{app}\config"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\CoProducerDesktop.py"; DestDir: "{app}"; Flags: ignoreversion

@@ -12,6 +12,8 @@ Build: candle.exe CoProducer_v3.2.wxs && light.exe -o CoProducer_v3.2.msi CoProd
     <Package InstallerVersion="500" Compressed="yes"
              InstallScope="perUser" Platform="x64"
              Description="CoProducer v3.2 - AI Production Assistant" />
+    <Icon Id="icon.png" SourceFile="..\assets\icon.png" />
+    <Property Id="ARPPRODUCTICON" Value="icon.png" />
 
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
