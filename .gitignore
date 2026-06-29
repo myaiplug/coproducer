@@ -10,6 +10,12 @@ reports/csv/*.csv
 reports/history/*.jsonl
 exports/previews/
 exports/repairs/*.bat
+exports/repairs/*.wav
+exports/repairs/*.mp3
+exports/repairs/*.flac
+reports/recent.json
+tests/real_validation_audio/
+tests/real_validation_results.json
 input/song/*
 input/reference/*
 input/batch/*
