@@ -262,41 +262,54 @@ def read_mutagen_tags(path: Path) -> Dict[str, str]:
 
 def embed_analysis_metadata(path: Path, analysis: Dict[str, Any]) -> bool:
     """Embed CoProducer / AI analysis results into the file tags (Mutagen).
-    Works best for MP3/FLAC/M4A/AIFF. WAV has limited support (documented).
+    For MP3: uses proper ID3 COMM and TXXX frames (reliable).
+    For other formats (FLAC etc): uses easy "comment" if available.
+    WAV has very limited tag support (documented).
     """
     try:
-        audio = MutagenFile(str(path), easy=True)
-        if audio is None:
-            # Try forcing ID3 for mp3-like
-            try:
-                audio = EasyID3(str(path))
-            except Exception:
-                return False
-        if audio is None:
-            return False
+        p = str(path)
+        ext = p.lower()
 
+        # Build payload
+        parts = ["CoProducer v3.1"]
         score = analysis.get("score")
         if score is not None:
-            existing = audio.get("comment", [""])[0] if "comment" in audio else ""
-            audio["comment"] = (existing + f" | CoProducerScore={int(score)}").strip(" |")
-            audio["CoProducerScore"] = str(int(score))
-
+            parts.append(f"Score={int(score)}")
         lufs = analysis.get("metrics", {}).get("loudness", {}).get("integrated_lufs")
         if lufs is not None:
-            audio["CoProducerLUFS"] = f"{float(lufs):.1f}"
-
+            parts.append(f"LUFS={float(lufs):.1f}")
         feats = analysis.get("extra", {}).get("librosa", {}) if isinstance(analysis.get("extra"), dict) else {}
         tempo = feats.get("tempo_bpm")
         if tempo:
-            audio["CoProducerTempo"] = str(tempo)
+            parts.append(f"Tempo={tempo}")
+        payload = " | ".join(parts)
 
-        # Always try to persist version info
-        audio["CoProducerVersion"] = "3.1.0"
-
-        audio.save()
-        return True
-    except Exception as e:
-        # WAV and some containers often fail silently here
+        if ext.endswith((".mp3", ".mp2")):
+            from mutagen.mp3 import MP3
+            from mutagen.id3 import ID3, COMM, TXXX, ID3NoHeaderError
+            try:
+                tags = ID3(p)
+            except ID3NoHeaderError:
+                tags = ID3()
+            tags.add(COMM(encoding=3, lang="eng", desc="CoProducer", text=payload))
+            tags.add(TXXX(encoding=3, desc="CoProducerAnalysis", text=payload))
+            tags.save(p)
+            return True
+        else:
+            audio = MutagenFile(p, easy=True)
+            if audio is None:
+                try:
+                    audio = EasyID3(p)
+                except Exception:
+                    audio = None
+            if audio is None:
+                return False
+            existing = audio.get("comment", [""])[0] if "comment" in audio else ""
+            if payload not in existing:
+                audio["comment"] = (existing + " " + payload).strip()
+            audio.save()
+            return True
+    except Exception:
         return False
 
 
@@ -368,7 +381,7 @@ def compare_reference(user: TrackAnalysis, reference: TrackAnalysis) -> Dict[str
         elif mag >= tol_notice:
             sev = "notice"
             pen = 3
-        diffs.append({"metric": name, "delta": d, "severity": sev})
+        diffs.append({"metric": name, "delta": d, "severity": sev, "score_penalty": pen})
         return pen
 
     penalty += delta(u.loudness.integrated_lufs, r.loudness.integrated_lufs, "LUFS", 1.0, 2.5) or 0
@@ -376,21 +389,48 @@ def compare_reference(user: TrackAnalysis, reference: TrackAnalysis) -> Dict[str
     penalty += delta(uf.get("tempo_bpm"), rf.get("tempo_bpm"), "Tempo", 3, 8) or 0
     penalty += delta(u.dynamic_range_db, r.dynamic_range_db, "DynRange", 2, 4) or 0
 
-    # Spectral centroid example
+    # Spectral centroid example - more aggressive penalty for pitch content differences
     uc = uf.get("spectral_centroid_hz")
     rc = rf.get("spectral_centroid_hz")
-    penalty += delta(uc, rc, "SpectralCentroid", 200, 500) or 0
+    penalty += delta(uc, rc, "SpectralCentroid", 150, 350) or 0
 
     sim = max(0, 100 - penalty)
+
+    # Similarity guard: single-metric differences should not produce very high scores
+    # unless multiple core metrics agree on similarity. Only apply for non-trivial single diffs.
+    non_pass = [d for d in diffs if d.get('severity') != 'pass']
+    core_metrics = {'LUFS', 'TruePeak', 'DynRange', 'SpectralCentroid', 'Tempo'}
+    core_non_pass = [d for d in non_pass if d['metric'] in core_metrics]
+    significant_single = len(non_pass) == 1 and any(d.get('severity') in ('warning', 'critical') for d in non_pass)
+    if significant_single and sim > 90:
+        if len(core_non_pass) < 2:
+            sim = min(sim, 88)
+
     recs = []
     if sim < 70:
         recs.append("Significant differences vs reference. Consider matching loudness and spectral balance.")
     if (u.loudness.integrated_lufs or 0) > (r.loudness.integrated_lufs or 0) + 1.5:
         recs.append("Target is louder than reference. Consider gentle limiting or gain staging.")
 
+    # Build debug breakdown
+    total_pen = sum(d.get('score_penalty', 0) for d in diffs)  # reuse if present, else from earlier
+    breakdown = {
+        "base": 100,
+        "penalty": penalty,
+        "final": int(sim),
+        "diff_count": len(non_pass),
+        "core_diff_count": len(core_non_pass),
+        "guard_triggered": len(non_pass) <= 1 and int(sim) <= 88 and penalty > 0
+    }
+
     return {
         "similarity_score": int(sim),
         "differences": diffs,
         "recommendations": recs or ["Track is reasonably close to reference."],
-        "plain_english": f"Reference match score: {int(sim)}/100. " + (" ".join(recs[:1]) if recs else "")
+        "plain_english": f"Reference match score: {int(sim)}/100. " + (" ".join(recs[:1]) if recs else ""),
+        "debug": {
+            "metric_deltas": diffs,
+            "score_breakdown": breakdown,
+            "explanation": f"Base 100 - {penalty} penalty from {len(non_pass)} differing metric(s). Guard applied: {breakdown['guard_triggered']}. Core metrics differing: {len(core_non_pass)}."
+        }
     }

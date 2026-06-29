@@ -172,6 +172,15 @@ def render_html(report: dict[str, Any]) -> str:
         body.append(track_section(report["reference_track"]))
     body.append(findings_section(report.get("findings") or []))
     body.append(table_section("Reference differences", report.get("differences") or []))
+    ref_match = report.get("reference_match") or {}
+    if ref_match.get("debug"):
+        db = ref_match["debug"]
+        debug_rows = []
+        if isinstance(db.get("score_breakdown"), dict):
+            debug_rows.append(db["score_breakdown"])
+        body.append(table_section("Reference Match Debug (deltas, severity, contributions)", debug_rows))
+        if db.get("explanation"):
+            body.append(f"<section class='panel'><h2>Score Explanation</h2><p>{escape(db['explanation'])}</p></section>")
     body.append(table_section("Track results", report.get("tracks") or []))
     codec = report.get("codec_analysis") or {}
     body.append(table_section("Codec previews", codec.get("previews") or []))
@@ -248,6 +257,11 @@ def render_text(report: dict[str, Any]) -> str:
         if rows:
             lines.extend(["", section])
             lines.extend(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in rows)
+
+    ref_match = report.get("reference_match") or {}
+    if ref_match.get("debug"):
+        lines.extend(["", "REFERENCE MATCH DEBUG"])
+        lines.append(json.dumps(ref_match["debug"], ensure_ascii=False, sort_keys=True))
     return "\n".join(str(line) for line in lines) + "\n"
 
 
