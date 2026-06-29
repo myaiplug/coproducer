@@ -703,34 +703,88 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* ============================================================
-   Theme Switcher
+   Settings Dropdown
    ============================================================ */
-.theme-switcher {
+.settings-trigger {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 100;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--nd-border);
+  background: var(--theme-surface, var(--nd-bg-panel));
+  backdrop-filter: blur(12px);
+  cursor: pointer;
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--theme-muted);
+  transition: all 0.2s;
+}
+.settings-trigger:hover {
+  border-color: var(--theme-accent, var(--nd-cyan));
+  color: var(--theme-accent, var(--nd-cyan));
+  box-shadow: 0 0 20px var(--theme-glow);
+}
+
+.settings-dropdown {
+  position: fixed;
+  top: 56px;
+  right: 20px;
+  z-index: 99;
+  background: var(--theme-surface, var(--nd-bg-panel));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--theme-border, var(--nd-border));
+  border-radius: var(--nd-radius-lg);
+  padding: 16px;
+  min-width: 220px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+}
+.settings-dropdown.open { display: flex; }
+
+.settings-label {
+  font-family: var(--nd-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--theme-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 8px 0 4px 0;
+  padding: 0 8px;
 }
 
 .theme-btn {
   font-family: var(--nd-font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 12px;
   border-radius: var(--nd-radius-sm);
-  border: 1px solid var(--nd-border);
+  border: 1px solid transparent;
   background: transparent;
   color: var(--nd-text-muted);
   cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  transition: all 0.15s;
+  text-align: left;
 }
 
-.theme-btn:hover { border-color: var(--theme-accent, var(--nd-cyan)); color: var(--theme-text); }
+.theme-btn:hover { background: var(--theme-glow); color: var(--theme-text); }
 .theme-btn.active {
+  border-color: var(--theme-border);
   background: var(--theme-glow);
-  border-color: var(--theme-accent, var(--nd-cyan));
   color: var(--theme-primary);
+}
+
+.theme-btn .theme-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
 }
 
 /* ============================================================
@@ -933,6 +987,17 @@ input[type="range"]::-webkit-slider-thumb {
 <body>
 
 <div class="app-shell">
+  <!-- Settings gear + theme dropdown -->
+  <button class="settings-trigger" onclick="toggleSettings()" title="Settings">&#9881;</button>
+  <div class="settings-dropdown" id="settingsDropdown">
+    <div class="settings-label">Theme</div>
+    <button class="theme-btn active" data-theme="obsidian-glass" onclick="setTheme('obsidian-glass')"><span class="theme-dot" style="background:#22d3ee"></span>Obsidian Glass</button>
+    <button class="theme-btn" data-theme="newton-antigravity" onclick="setTheme('newton-antigravity')"><span class="theme-dot" style="background:#b56cff"></span>Newton Antigravity</button>
+    <button class="theme-btn" data-theme="chromatic-nihilism" onclick="setTheme('chromatic-nihilism')"><span class="theme-dot" style="background:#ff0080"></span>Chromatic Nihilism</button>
+    <button class="theme-btn" data-theme="artifact-scan" onclick="setTheme('artifact-scan')"><span class="theme-dot" style="background:#00ffaa"></span>Artifact Scan</button>
+    <button class="theme-btn" data-theme="crystal-prism" onclick="setTheme('crystal-prism')"><span class="theme-dot" style="background:#a78bfa"></span>Crystal Prism</button>
+  </div>
+
   <!-- Sidebar -->
   <nav class="sidebar">
     <div class="sidebar-brand">NoDAW</div>
@@ -944,15 +1009,18 @@ input[type="range"]::-webkit-slider-thumb {
       <button class="nav-item" onclick="scrollToSection('components')">
         <span class="nav-dot"></span><span>Components</span>
       </button>
-      <button class="nav-item" onclick="scrollToSection('themes')">
-        <span class="nav-dot"></span><span>Themes</span>
+      <button class="nav-item" onclick="scrollToSection('abtest')">
+        <span class="nav-dot"></span><span>A/B Test</span>
       </button>
-      <button class="nav-item" onclick="scrollToSection('stemplayer')">
-        <span class="nav-dot"></span><span>Stem Player</span>
+      <button class="nav-item" onclick="scrollToSection('metadata')">
+        <span class="nav-dot"></span><span>Metadata</span>
       </button>
-      <button class="nav-item" onclick="scrollToSection('pricing')">
-        <span class="nav-dot"></span><span>Pricing</span>
+      <button class="nav-item" onclick="scrollToSection('audiolab')">
+        <span class="nav-dot"></span><span>Audio Lab</span>
       </button>
+      <a href="pricing.html" style="text-decoration:none">
+        <button class="nav-item"><span class="nav-dot"></span><span>Pricing</span></button>
+      </a>
       <button class="nav-item" onclick="scrollToSection('landing')">
         <span class="nav-dot"></span><span>Landing</span>
       </button>
@@ -1099,164 +1167,90 @@ input[type="range"]::-webkit-slider-thumb {
           </div>
         </div>
         <div class="panel">
-          <div class="panel-title"><span class="led success"></span>Status Badges</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-            <span class="badge badge-cyan">Ready</span>
-            <span class="badge badge-emerald">Release Ready</span>
-            <span class="badge badge-orange">Needs Review</span>
-            <span class="badge badge-red">Critical</span>
-            <span class="badge badge-gold">Reference Match</span>
-            <span class="badge badge-cyan">Streaming OK</span>
-            <span class="badge badge-emerald">AI Reviewed</span>
-            <span class="badge" style="background:var(--stem-vocals);color:#000">Vocals</span>
-            <span class="badge" style="background:var(--stem-drums);color:#000">Drums</span>
-            <span class="badge" style="background:var(--stem-bass);color:#000">Bass</span>
+          <div class="panel-title"><span class="led success"></span>Upload Zone</div>
+          <div class="upload-zone" style="padding:24px">
+            <div class="upload-icon" style="font-size:24px">+</div>
+            <div class="upload-title" style="font-size:14px">Drop audio here</div>
+            <div class="upload-sub">or click to browse</div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ============================================================
-         THEMES
+         A/B TESTING LAB
          ============================================================ -->
-    <section id="themes" class="mb-48">
-      <h2 class="section-title">Five Themes</h2>
-      <p class="section-sub">Select a theme below to preview the full design system in each product identity.</p>
+    <section id="abtest" class="mb-48">
+      <h2 class="section-title">A/B Testing Lab</h2>
+      <p class="section-sub">Compare two audio files side by side with synchronized waveform overlay.</p>
 
-      <div class="panel mb-24">
-        <div class="panel-title"><span class="led animate-pulse-glow"></span>Theme Switcher</div>
-        <div class="theme-switcher" id="themeSwitcher">
-          <button class="theme-btn active" data-theme="obsidian-glass">Obsidian Glass</button>
-          <button class="theme-btn" data-theme="newton-antigravity">Newton Antigravity</button>
-          <button class="theme-btn" data-theme="chromatic-nihilism">Chromatic Nihilism</button>
-          <button class="theme-btn" data-theme="artifact-scan">Artifact Scan</button>
-          <button class="theme-btn" data-theme="crystal-prism">Crystal Prism</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" class="mb-16">
+        <div class="panel">
+          <div class="panel-title"><span class="led"></span>Track A (Original)</div>
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex">
+            Load A
+            <input type="file" id="abFileA" accept="audio/*" style="display:none">
+          </label>
+          <span id="abNameA" style="font-size:11px;color:var(--theme-muted);font-family:var(--nd-font-mono);margin-left:8px">No file</span>
+          <canvas id="abWaveA" class="viz-canvas" height="60" style="margin-top:8px"></canvas>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><span class="led warning"></span>Track B (Processed)</div>
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex">
+            Load B
+            <input type="file" id="abFileB" accept="audio/*" style="display:none">
+          </label>
+          <span id="abNameB" style="font-size:11px;color:var(--theme-muted);font-family:var(--nd-font-mono);margin-left:8px">No file</span>
+          <canvas id="abWaveB" class="viz-canvas" height="60" style="margin-top:8px"></canvas>
         </div>
       </div>
-
-      <!-- Theme preview cards -->
-      <div class="card-grid card-grid-5" id="themePreviewCards" style="grid-template-columns:repeat(5,1fr)">
-        <div class="metric-card" style="border-color:rgba(34,211,238,0.3)">
-          <div class="metric-label" style="color:#22d3ee">Obsidian Glass</div>
-          <div style="font-size:11px;color:var(--nd-text-muted);margin-top:8px">Default flagship</div>
-        </div>
-        <div class="metric-card" style="border-color:rgba(181,108,255,0.3)">
-          <div class="metric-label" style="color:#b56cff">Newton</div>
-          <div style="font-size:11px;color:var(--nd-text-muted);margin-top:8px">Surreal premium</div>
-        </div>
-        <div class="metric-card" style="border-color:rgba(255,0,128,0.3)">
-          <div class="metric-label" style="color:#ff0080">Chromatic</div>
-          <div style="font-size:11px;color:var(--nd-text-muted);margin-top:8px">Aggressive neon</div>
-        </div>
-        <div class="metric-card" style="border-color:rgba(0,255,170,0.3)">
-          <div class="metric-label" style="color:#00ffaa">Artifact</div>
-          <div style="font-size:11px;color:var(--nd-text-muted);margin-top:8px">Forensic scan</div>
-        </div>
-        <div class="metric-card" style="border-color:rgba(167,139,250,0.3)">
-          <div class="metric-label" style="color:#a78bfa">Crystal</div>
-          <div style="font-size:11px;color:var(--nd-text-muted);margin-top:8px">Future luxury</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         STEM PLAYER
-         ============================================================ -->
-    <section id="stemplayer" class="mb-48">
-      <h2 class="section-title">Stem Player</h2>
-      <p class="section-sub">Multi-track stem separation interface with per-stem solo/mute controls.</p>
 
       <div class="panel">
-        <div class="panel-title"><span class="led success"></span>Liminal StemSplit — Active Session</div>
-
-        <div class="stem-row">
-          <div class="stem-color" style="background:var(--stem-vocals)"></div>
-          <div class="stem-info"><div class="stem-name" style="color:var(--stem-vocals)">Vocals</div><div class="stem-status">48 kHz · 24-bit · Stereo</div></div>
-          <button class="stem-toggle active" onclick="this.classList.toggle('active')">S</button>
-          <button class="stem-toggle" onclick="this.classList.toggle('active')">M</button>
-        </div>
-
-        <div class="stem-row">
-          <div class="stem-color" style="background:var(--stem-drums)"></div>
-          <div class="stem-info"><div class="stem-name" style="color:var(--stem-drums)">Drums</div><div class="stem-status">48 kHz · 24-bit · Stereo</div></div>
-          <button class="stem-toggle active" onclick="this.classList.toggle('active')">S</button>
-          <button class="stem-toggle" onclick="this.classList.toggle('active')">M</button>
-        </div>
-
-        <div class="stem-row">
-          <div class="stem-color" style="background:var(--stem-bass)"></div>
-          <div class="stem-info"><div class="stem-name" style="color:var(--stem-bass)">Bass</div><div class="stem-status">48 kHz · 24-bit · Stereo</div></div>
-          <button class="stem-toggle active" onclick="this.classList.toggle('active')">S</button>
-          <button class="stem-toggle" onclick="this.classList.toggle('active')">M</button>
-        </div>
-
-        <div class="stem-row">
-          <div class="stem-color" style="background:var(--stem-other)"></div>
-          <div class="stem-info"><div class="stem-name" style="color:var(--stem-other)">Other</div><div class="stem-status">48 kHz · 24-bit · Stereo</div></div>
-          <button class="stem-toggle active" onclick="this.classList.toggle('active')">S</button>
-          <button class="stem-toggle" onclick="this.classList.toggle('active')">M</button>
-        </div>
-
-        <div style="margin-top:16px;display:flex;gap:8px">
-          <button class="btn btn-primary btn-sm">Play All</button>
-          <button class="btn btn-secondary btn-sm">Stop</button>
-          <button class="btn btn-secondary btn-sm">Export Stems</button>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" id="abPlayBtn" onclick="abTogglePlay()">Play A</button>
+          <button class="btn btn-secondary btn-sm" onclick="abStop()">Stop</button>
+          <div style="display:flex;gap:4px;font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted)">
+            <label class="toggle"><input type="radio" name="abSelect" value="a" checked onchange="abSelectTrack('a')"><span class="toggle-track"></span>A</label>
+            <label class="toggle"><input type="radio" name="abSelect" value="b" onchange="abSelectTrack('b')"><span class="toggle-track"></span>B</label>
+          </div>
+          <span id="abStatus" style="font-family:var(--nd-font-mono);font-size:11px;color:var(--theme-muted)">Ready</span>
         </div>
       </div>
     </section>
 
     <!-- ============================================================
-         PRICING
+         METADATA LAB
          ============================================================ -->
-    <section id="pricing" class="mb-48">
-      <h2 class="section-title">Pricing</h2>
-      <p class="section-sub">Flexible plans for every production workflow.</p>
+    <section id="metadata" class="mb-48">
+      <h2 class="section-title">Metadata Lab</h2>
+      <p class="section-sub">Inspect and edit audio file metadata, technical specifications, and analysis tags.</p>
 
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
-        <div class="price-card">
-          <div style="font-family:var(--nd-font-tech);font-size:14px;font-weight:600;color:var(--theme-muted);margin-bottom:12px;letter-spacing:1px">STARTER</div>
-          <div class="price-amount">$19</div>
-          <div class="price-period">per month</div>
-          <ul class="price-features">
-            <li>Single track analysis</li>
-            <li>Basic metrics</li>
-            <li>HTML reports</li>
-            <li>Email support</li>
-          </ul>
-          <button class="btn btn-secondary w-full">Get Started</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="panel">
+          <div class="panel-title"><span class="led success"></span>File Info</div>
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;margin-bottom:12px">
+            Load File
+            <input type="file" id="metaFileInput" accept="audio/*" style="display:none">
+          </label>
+          <div id="metaInfo" style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-family:var(--nd-font-mono);font-size:11px;color:var(--theme-muted)">No file loaded</div>
+          </div>
         </div>
-
-        <div class="price-card featured">
-          <div style="font-family:var(--nd-font-tech);font-size:14px;font-weight:600;color:var(--theme-accent,var(--nd-cyan));margin-bottom:12px;letter-spacing:1px">PRO</div>
-          <div class="price-amount">$49</div>
-          <div class="price-period">per month</div>
-          <ul class="price-features">
-            <li>Unlimited analysis</li>
-            <li>Reference matching</li>
-            <li>Batch processing</li>
-            <li>One-click FFmpeg repairs</li>
-            <li>A/B testing</li>
-            <li>Priority support</li>
-          </ul>
-          <button class="btn btn-primary w-full">Start Free Trial</button>
-        </div>
-
-        <div class="price-card">
-          <div style="font-family:var(--nd-font-tech);font-size:14px;font-weight:600;color:var(--theme-muted);margin-bottom:12px;letter-spacing:1px">STUDIO</div>
-          <div class="price-amount">$149</div>
-          <div class="price-period">per month</div>
-          <ul class="price-features">
-            <li>Everything in Pro</li>
-            <li>Album consistency</li>
-            <li>Streaming previews</li>
-            <li>Team collaboration</li>
-            <li>API access</li>
-            <li>Dedicated support</li>
-          </ul>
-          <button class="btn btn-secondary w-full">Contact Sales</button>
+        <div class="panel">
+          <div class="panel-title"><span class="led"></span>Tags</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div><label style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);display:block;margin-bottom:2px">Title</label><input class="nd-input" id="metaTitle" placeholder="Track title"></div>
+            <div><label style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);display:block;margin-bottom:2px">Artist</label><input class="nd-input" id="metaArtist" placeholder="Artist name"></div>
+            <div><label style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);display:block;margin-bottom:2px">Album</label><input class="nd-input" id="metaAlbum" placeholder="Album name"></div>
+            <div><label style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);display:block;margin-bottom:2px">Genre</label><input class="nd-input" id="metaGenre" placeholder="Genre"></div>
+          </div>
         </div>
       </div>
     </section>
+
+    <!-- ============================================================
+         LANDING PAGE HERO (preview)
+         ============================================================ -->
 
     <!-- ============================================================
          LANDING PAGE HERO
@@ -1388,6 +1382,173 @@ setInterval(() => {
 }, 200);
 
 // ============================================================
+// Settings Dropdown
+// ============================================================
+function toggleSettings() {
+  document.getElementById('settingsDropdown').classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.settings-trigger') && !e.target.closest('.settings-dropdown')) {
+    document.getElementById('settingsDropdown')?.classList.remove('open');
+  }
+});
+
+function setTheme(name) {
+  document.documentElement.setAttribute('data-theme', name);
+  localStorage.setItem('nodaw-theme', name);
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === name));
+}
+
+// Restore saved theme
+const savedTheme = localStorage.getItem('nodaw-theme');
+if (savedTheme) setTheme(savedTheme);
+
+// ============================================================
+// A/B Testing
+// ============================================================
+const abState = { playerA: null, playerB: null, active: 'a', ctx: null, isPlaying: false };
+
+document.getElementById('abFileA')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('abNameA').textContent = file.name;
+  const buf = await file.arrayBuffer();
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (ctx.state === 'suspended') await ctx.resume();
+  abState.ctx = ctx;
+  const decoded = await ctx.decodeAudioData(buf);
+  drawWaveform(decoded, 'abWaveA');
+  abState.playerA = decoded;
+});
+
+document.getElementById('abFileB')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('abNameB').textContent = file.name;
+  const buf = await file.arrayBuffer();
+  const ctx = abState.ctx || new (window.AudioContext || window.webkitAudioContext)();
+  if (ctx.state === 'suspended') await ctx.resume();
+  abState.ctx = ctx;
+  const decoded = await ctx.decodeAudioData(buf);
+  drawWaveform(decoded, 'abWaveB');
+  abState.playerB = decoded;
+});
+
+function drawWaveform(buffer, canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = canvas.clientWidth;
+  const h = canvas.height;
+  const data = buffer.getChannelData(0);
+  const step = Math.max(1, Math.floor(data.length / w));
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.beginPath();
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--nd-cyan').trim() || '#22d3ee';
+  ctx.lineWidth = 1.5;
+  ctx.moveTo(0, h/2);
+  for (let i = 0; i < w; i++) {
+    const idx = i * step;
+    let max = 0;
+    for (let j = 0; j < step && idx + j < data.length; j++) {
+      const abs = Math.abs(data[idx + j]);
+      if (abs > max) max = abs;
+    }
+    ctx.lineTo(i, h/2 - max * (h/2 - 2));
+  }
+  ctx.stroke();
+
+  // Mirror bottom
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(34,211,238,0.15)';
+  ctx.moveTo(0, h/2);
+  for (let i = 0; i < w; i++) {
+    const idx = i * step;
+    let max = 0;
+    for (let j = 0; j < step && idx + j < data.length; j++) {
+      const abs = Math.abs(data[idx + j]);
+      if (abs > max) max = abs;
+    }
+    ctx.lineTo(i, h/2 + max * (h/2 - 2));
+  }
+  ctx.stroke();
+}
+
+function abSelectTrack(track) {
+  abState.active = track;
+  abStop();
+  document.getElementById('abStatus').textContent = `Selected: Track ${track.toUpperCase()}`;
+}
+
+function abTogglePlay() {
+  const buf = abState.active === 'a' ? abState.playerA : abState.playerB;
+  if (!buf) { document.getElementById('abStatus').textContent = 'Load track first'; return; }
+  const btn = document.getElementById('abPlayBtn');
+
+  if (abState.isPlaying) {
+    if (abState.source) { abState.source.stop(); abState.source.disconnect(); }
+    abState.isPlaying = false;
+    btn.textContent = `Play ${abState.active.toUpperCase()}`;
+    document.getElementById('abStatus').textContent = 'Stopped';
+    return;
+  }
+
+  Tone.start().then(() => {
+    if (abState.source) { abState.source.disconnect(); }
+    const ac = Tone.context.rawContext;
+    abState.source = ac.createBufferSource();
+    abState.source.buffer = buf;
+    abState.source.connect(ac.destination);
+    abState.source.start(0);
+    abState.isPlaying = true;
+    btn.textContent = 'Stop';
+    const name = abState.active === 'a' ? document.getElementById('abNameA').textContent : document.getElementById('abNameB').textContent;
+    document.getElementById('abStatus').textContent = `Playing: ${name}`;
+  });
+}
+
+function abStop() {
+  if (abState.source) { abState.source.stop(); abState.source.disconnect(); abState.source = null; }
+  abState.isPlaying = false;
+  document.getElementById('abPlayBtn').textContent = `Play ${abState.active.toUpperCase()}`;
+}
+
+// ============================================================
+// Metadata Lab
+// ============================================================
+document.getElementById('metaFileInput')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const container = document.getElementById('metaInfo');
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const buf = await file.arrayBuffer();
+  const decoded = await ctx.decodeAudioData(buf);
+
+  const info = [
+    { label: 'File Name', value: file.name },
+    { label: 'File Size', value: (file.size / 1024).toFixed(1) + ' KB' },
+    { label: 'Duration', value: decoded.duration.toFixed(2) + ' s' },
+    { label: 'Sample Rate', value: decoded.sampleRate + ' Hz' },
+    { label: 'Channels', value: decoded.numberOfChannels },
+    { label: 'Bit Depth', value: '32-bit (float)' },
+    { label: 'Format', value: file.type || 'Unknown' },
+  ];
+
+  container.innerHTML = info.map(i =>
+    `<div style="display:flex;justify-content:space-between;font-family:var(--nd-font-mono);font-size:11px;padding:3px 0;border-bottom:1px solid var(--nd-border)">
+      <span style="color:var(--theme-muted)">${i.label}</span>
+      <span style="color:var(--theme-text)">${i.value}</span>
+    </div>`
+  ).join('');
+
+  // Fill tags from filename heuristic
+  const stem = file.name.replace(/\.[^.]+$/, '');
+  document.getElementById('metaTitle').value = stem;
+  document.getElementById('metaGenre').value = decoded.numberOfChannels > 1 ? 'Stereo' : 'Mono';
+});
+
+// ============================================================
 // Score Ring Animation
 // ============================================================
 function animateScore(targetScore) {
@@ -1411,31 +1572,6 @@ function animateScore(targetScore) {
 const initialOffset = 502 - (87 / 100) * 502;
 document.getElementById('scoreArc').style.strokeDashoffset = initialOffset;
 animateScore(87);
-
-// ============================================================
-// Theme Switcher
-// ============================================================
-function updateThemeUI() {
-  const current = document.documentElement.getAttribute('data-theme');
-  document.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.theme === current);
-  });
-  localStorage.setItem('nodaw-theme', current);
-}
-
-document.querySelectorAll('.theme-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.documentElement.setAttribute('data-theme', btn.dataset.theme);
-    updateThemeUI();
-  });
-});
-
-// Restore saved theme
-const saved = localStorage.getItem('nodaw-theme');
-if (saved) {
-  document.documentElement.setAttribute('data-theme', saved);
-  updateThemeUI();
-}
 
 // ============================================================
 // Scroll to sections
