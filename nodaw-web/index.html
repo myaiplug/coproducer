@@ -6,6 +6,7 @@
 <title>NoDAW Design System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..900&family=JetBrains+Mono:wght@400..700&family=Rajdhani:wght@500;600;700&family=Syncopate:wght@400;700&family=Manrope:wght@400..700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
 <style>
 /* ============================================================
    NoDAW Master Design Tokens
@@ -859,6 +860,54 @@ input[type="range"]::-webkit-slider-thumb {
   .card-grid-2, .card-grid-3, .card-grid-4 { grid-template-columns: 1fr; }
 }
 
+/* Canvas visualizations */
+.viz-canvas {
+  background: var(--nd-bg-deep);
+  border: 1px solid var(--nd-border);
+  border-radius: var(--nd-radius-sm);
+  width: 100%;
+  display: block;
+}
+
+.viz-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 900px) {
+  .viz-grid { grid-template-columns: 1fr; }
+}
+
+.freq-band-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+  font-family: var(--nd-font-mono);
+  font-size: 10px;
+}
+
+.freq-band-bar {
+  height: 8px;
+  border-radius: 2px;
+  transition: width 0.08s ease, background 0.3s;
+  min-width: 2px;
+}
+
+.freq-band-label { width: 70px; color: var(--theme-muted); flex-shrink: 0; }
+.freq-band-value { width: 40px; text-align: right; color: var(--theme-text); font-family: var(--nd-font-mono); font-size: 10px; }
+
+/* Phase scope dot */
+.phase-dot {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--theme-accent, var(--nd-cyan));
+  box-shadow: 0 0 6px var(--theme-accent, var(--nd-cyan));
+  pointer-events: none;
+}
+
 /* Scanline overlay on hover for panels */
 .panel-scan {
   position: relative;
@@ -1251,6 +1300,61 @@ input[type="range"]::-webkit-slider-thumb {
       </div>
     </section>
 
+    <!-- ============================================================
+         AUDIO LAB (Tone.js Real-Time Visualizations)
+         ============================================================ -->
+    <section id="audiolab" class="mb-48">
+      <h2 class="section-title">Audio Lab</h2>
+      <p class="section-sub">Real-time waveform, frequency balance, phase correlation, and spectrogram powered by Tone.js.</p>
+
+      <!-- Controls -->
+      <div class="panel mb-24">
+        <div class="panel-title"><span class="led animate-pulse-glow"></span>Audio Engine</div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <label class="btn btn-secondary" style="cursor:pointer">
+            Load Audio
+            <input type="file" id="audioFileInput" accept="audio/*" style="display:none">
+          </label>
+          <button class="btn btn-primary btn-sm" id="playBtn" onclick="togglePlay()">Play</button>
+          <button class="btn btn-danger btn-sm" onclick="stopAudio()">Stop</button>
+          <span id="audioStatus" style="font-family:var(--nd-font-mono);font-size:11px;color:var(--theme-muted)">No file loaded</span>
+          <input type="range" id="volumeSlider" min="-40" max="0" value="-6" style="width:100px;margin-left:auto">
+        </div>
+      </div>
+
+      <!-- Waveform -->
+      <div class="panel mb-24">
+        <div class="panel-title"><span class="led"></span>Waveform</div>
+        <canvas id="waveformCanvas" class="viz-canvas" height="120"></canvas>
+      </div>
+
+      <!-- Three-column visualizations -->
+      <div class="viz-grid mb-24">
+        <!-- Frequency Balance -->
+        <div class="panel">
+          <div class="panel-title"><span class="led success"></span>Frequency Balance</div>
+          <div id="freqBands" style="display:flex;flex-direction:column;gap:2px"></div>
+        </div>
+
+        <!-- Phase Correlation -->
+        <div class="panel" style="position:relative">
+          <div class="panel-title"><span class="led"></span>Phase Correlation</div>
+          <canvas id="phaseCanvas" class="viz-canvas" height="200"></canvas>
+          <div style="display:flex;justify-content:space-between;font-family:var(--nd-font-mono);font-size:9px;color:var(--theme-muted);margin-top:4px">
+            <span>Out of Phase</span>
+            <span id="phaseValue">0.00</span>
+            <span>In Phase</span>
+          </div>
+        </div>
+
+        <!-- Spectrogram -->
+        <div class="panel">
+          <div class="panel-title"><span class="led warning"></span>Spectrogram</div>
+          <canvas id="spectrogramCanvas" class="viz-canvas" height="200"></canvas>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -1355,6 +1459,349 @@ document.querySelectorAll('input[type="range"]').forEach(slider => {
     }
   });
 });
+
+// ============================================================
+// Tone.js Audio Lab
+// ============================================================
+const audioState = { player: null, isPlaying: false, source: null, buffer: null };
+
+// Analyser nodes
+let waveformAnalyser, fftAnalyser, meterAnalyser;
+
+// Canvas refs
+const waveformCanvas = document.getElementById('waveformCanvas');
+const waveformCtx = waveformCanvas?.getContext('2d');
+const phaseCanvas = document.getElementById('phaseCanvas');
+const phaseCtx = phaseCanvas?.getContext('2d');
+const spectrogramCanvas = document.getElementById('spectrogramCanvas');
+const spectrogramCtx = spectrogramCanvas?.getContext('2d');
+
+// Frequency bands config
+const FREQ_BANDS = [
+  { label: 'Sub', min: 20, max: 60, id: 'sub' },
+  { label: 'Bass', min: 60, max: 150, id: 'bass' },
+  { label: 'Low Mid', min: 150, max: 400, id: 'lowmid' },
+  { label: 'Mid', min: 400, max: 1200, id: 'mid' },
+  { label: 'Presence', min: 1200, max: 4000, id: 'pres' },
+  { label: 'High', min: 4000, max: 10000, id: 'high' },
+  { label: 'Air', min: 10000, max: 18000, id: 'air' },
+];
+
+// Spectrogram buffer (columns of FFT data)
+const SPECTROGRAM_WIDTH = 256;
+const SPECTROGRAM_HEIGHT = 128;
+let spectrogramBuffer = [];
+
+// Build frequency band UI
+const freqContainer = document.getElementById('freqBands');
+if (freqContainer) {
+  FREQ_BANDS.forEach((band, i) => {
+    const row = document.createElement('div');
+    row.className = 'freq-band-row';
+    row.innerHTML = `
+      <span class="freq-band-label">${band.label}</span>
+      <div style="flex:1;background:var(--nd-bg-deep);border-radius:2px;height:8px;position:relative">
+        <div class="freq-band-bar" id="freqBar${i}" style="width:5%"></div>
+      </div>
+      <span class="freq-band-value" id="freqVal${i}">-inf</span>
+    `;
+    freqContainer.appendChild(row);
+  });
+}
+
+// File upload handler
+document.getElementById('audioFileInput')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('audioStatus').textContent = `Loading ${file.name}...`;
+
+  try {
+    // Stop any previous playback
+    stopAudio();
+
+    // Decode with Web Audio API first
+    const arrayBuffer = await file.arrayBuffer();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Resume context if suspended
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+    const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+    audioState.buffer = decoded;
+
+    // Create Tone.js player from the buffer
+    if (audioState.player) { audioState.player.dispose(); }
+
+    // Create a Tone AudioBuffer from decoded data
+    const len = decoded.length;
+    const numChan = decoded.numberOfChannels;
+    const channels = [];
+    for (let c = 0; c < numChan; c++) {
+      channels.push(decoded.getChannelData(c));
+    }
+    const toneBuffer = new Tone.ToneArrayBuffer(channels[0], decoded.sampleRate);
+    // Actually use Tone's built-in buffer mechanism
+    // We'll create a custom approach using raw PCM
+
+    // Simpler approach: use URL.createObjectURL with Tone.Player
+    const blobUrl = URL.createObjectURL(file);
+    audioState.player = new Tone.Player({
+      url: blobUrl,
+      autostart: false,
+      loop: false,
+      onload: () => {
+        document.getElementById('audioStatus').textContent = `Ready: ${file.name}`;
+      },
+      onerror: (err) => {
+        document.getElementById('audioStatus').textContent = `Error: ${err}`;
+      }
+    }).toDestination();
+
+    // Wait for load
+    await new Promise((resolve, reject) => {
+      if (audioState.player.loaded) resolve();
+      else {
+        audioState.player.onload = resolve;
+        audioState.player.onerror = reject;
+      }
+    });
+
+    // Set up analysers
+    waveformAnalyser = new Tone.Waveform(1024);
+    fftAnalyser = new Tone.FFT({ size: 1024 });
+    meterAnalyser = new Tone.Meter();
+
+    audioState.player.connect(waveformAnalyser);
+    audioState.player.connect(fftAnalyser);
+    audioState.player.connect(meterAnalyser);
+
+    // Set initial volume
+    const vol = new Tone.Volume(parseFloat(document.getElementById('volumeSlider').value));
+    audioState.player.chain(waveformAnalyser, fftAnalyser, meterAnalyser, vol, Tone.Destination);
+
+    document.getElementById('audioStatus').textContent = `Ready: ${file.name}`;
+    audioState.isLoaded = true;
+
+    // Start visualization loop
+    if (!audioState.animId) renderLoop();
+
+  } catch (err) {
+    console.error('Audio load error:', err);
+    document.getElementById('audioStatus').textContent = `Error: ${err.message}`;
+  }
+});
+
+// Volume slider
+document.getElementById('volumeSlider')?.addEventListener('input', (e) => {
+  // Will be applied when player is created
+});
+
+function togglePlay() {
+  if (!audioState.player) return;
+  if (audioState.isPlaying) {
+    audioState.player.stop();
+    audioState.isPlaying = false;
+    document.getElementById('playBtn').textContent = 'Play';
+  } else {
+    Tone.start().then(() => {
+      audioState.player.start(0);
+      audioState.isPlaying = true;
+      document.getElementById('playBtn').textContent = 'Pause';
+      document.getElementById('audioStatus').textContent = 'Playing';
+    });
+  }
+}
+
+function stopAudio() {
+  if (audioState.player) {
+    audioState.player.stop();
+    audioState.player.dispose();
+    audioState.player = null;
+  }
+  audioState.isPlaying = false;
+  document.getElementById('playBtn').textContent = 'Play';
+  document.getElementById('audioStatus').textContent = 'Stopped';
+}
+
+// ============================================================
+// Visualization Render Loop
+// ============================================================
+function renderLoop() {
+  audioState.animId = requestAnimationFrame(renderLoop);
+
+  // Only render if we have analysers
+  if (!waveformAnalyser && !fftAnalyser) return;
+
+  try {
+    // --- Waveform ---
+    if (waveformCanvas && waveformCtx) {
+      const waveform = waveformAnalyser ? waveformAnalyser.getValue() : new Float32Array(1024);
+      const w = waveformCanvas.width = waveformCanvas.clientWidth;
+      const h = waveformCanvas.height;
+
+      waveformCtx.clearRect(0, 0, w, h);
+      waveformCtx.beginPath();
+      waveformCtx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--nd-cyan').trim() || '#22d3ee';
+      waveformCtx.lineWidth = 1.5;
+
+      const len = waveform.length;
+      const step = w / len;
+      waveformCtx.moveTo(0, h / 2 + (waveform[0] || 0) * (h / 2 - 4));
+      for (let i = 1; i < len; i++) {
+        const x = i * step;
+        const y = h / 2 + (waveform[i] || 0) * (h / 2 - 4);
+        waveformCtx.lineTo(x, y);
+      }
+      waveformCtx.stroke();
+
+      // Center line
+      waveformCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+      waveformCtx.lineWidth = 1;
+      waveformCtx.beginPath();
+      waveformCtx.moveTo(0, h / 2);
+      waveformCtx.lineTo(w, h / 2);
+      waveformCtx.stroke();
+    }
+
+    // --- FFT Frequency Data ---
+    if (fftAnalyser) {
+      const fftData = fftAnalyser.getValue();
+      const freqBins = fftData.length;
+      const nyquist = Tone.context.sampleRate / 2;
+      const binWidth = nyquist / freqBins;
+
+      // Update frequency band bars
+      FREQ_BANDS.forEach((band, i) => {
+        const startBin = Math.floor(band.min / binWidth);
+        const endBin = Math.min(Math.ceil(band.max / binWidth), freqBins);
+        let sum = 0, count = 0;
+        for (let b = startBin; b < endBin && b < freqBins; b++) {
+          const val = fftData[b];
+          if (isFinite(val)) { sum += val; count++; }
+        }
+        const avg = count > 0 ? sum / count : -100;
+        // Convert from dB (negative) to 0-100%
+        const pct = Math.min(100, Math.max(0, (avg + 100) / 100 * 100));
+        const bar = document.getElementById(`freqBar${i}`);
+        const val = document.getElementById(`freqVal${i}`);
+        if (bar) bar.style.width = pct + '%';
+        if (val) val.textContent = avg.toFixed(1) + ' dB';
+      });
+
+      // --- Spectrogram ---
+      if (spectrogramCanvas && spectrogramCtx) {
+        const sw = spectrogramCanvas.width = spectrogramCanvas.clientWidth;
+        const sh = SPECTROGRAM_HEIGHT;
+
+        // Add current FFT slice to buffer (downsampled)
+        const sliceWidth = 64;
+        const slice = [];
+        const step2 = Math.max(1, Math.floor(freqBins / sliceWidth));
+        for (let i = 0; i < sliceWidth; i++) {
+          let s = 0, c2 = 0;
+          for (let j = 0; j < step2 && i * step2 + j < freqBins; j++) {
+            const v = fftData[i * step2 + j];
+            if (isFinite(v)) { s += v; c2++; }
+          }
+          slice.push(c2 > 0 ? s / c2 : -100);
+        }
+
+        spectrogramBuffer.unshift(slice);
+        if (spectrogramBuffer.length > sh) spectrogramBuffer.pop();
+
+        // Clear spectrogram
+        spectrogramCtx.clearRect(0, 0, sw, sh);
+
+        const colW = sw / sliceWidth;
+        const rowH = sh / Math.max(1, spectrogramBuffer.length);
+
+        for (let row = 0; row < spectrogramBuffer.length; row++) {
+          for (let col = 0; col < sliceWidth; col++) {
+            const val = spectrogramBuffer[row]?.[col] ?? -100;
+            // Map dB (-100 to 0) to color
+            const norm = Math.min(1, Math.max(0, (val + 60) / 60));
+            const r = Math.floor(norm * 255);
+            const g = Math.floor(norm * 200);
+            const b = Math.floor((1 - norm) * 255);
+            spectrogramCtx.fillStyle = `rgb(${r},${g},${b})`;
+            spectrogramCtx.fillRect(col * colW, row * rowH, colW + 0.5, rowH + 0.5);
+          }
+        }
+      }
+    }
+
+    // --- Phase Correlation ---
+    if (phaseCanvas && phaseCtx && audioState.buffer) {
+      const pw = phaseCanvas.width = phaseCanvas.clientWidth;
+      const ph = phaseCanvas.height;
+
+      phaseCtx.clearRect(0, 0, pw, ph);
+
+      // Dark background
+      phaseCtx.fillStyle = 'rgba(2,6,23,0.5)';
+      phaseCtx.fillRect(0, 0, pw, ph);
+
+      // Grid crosshair
+      const cx = pw / 2, cy = ph / 2;
+      phaseCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+      phaseCtx.lineWidth = 1;
+      phaseCtx.beginPath();
+      phaseCtx.moveTo(cx, 0); phaseCtx.lineTo(cx, ph);
+      phaseCtx.moveTo(0, cy); phaseCtx.lineTo(pw, cy);
+      phaseCtx.stroke();
+
+      // Get current samples for L/R
+      const buf = audioState.buffer;
+      const pos = audioState.player ? (audioState.player.now() * buf.sampleRate || 0) : 0;
+      const currentFrame = Math.floor(pos) % buf.length;
+      const windowSize = 512;
+      const halfW = windowSize / 2;
+
+      let sumPhase = 0, countPhase = 0;
+      const scale = Math.min(pw, ph) / 2 * 0.8;
+
+      phaseCtx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--nd-cyan').trim() || '#22d3ee';
+      phaseCtx.shadowColor = getComputedStyle(document.documentElement).getPropertyValue('--nd-cyan').trim() || '#22d3ee';
+      phaseCtx.shadowBlur = 8;
+
+      for (let i = 0; i < windowSize; i++) {
+        const idx = (currentFrame - halfW + i + buf.length) % buf.length;
+        let l = 0, r = 0;
+        if (buf.numberOfChannels >= 2) {
+          l = buf.getChannelData(0)[idx] || 0;
+          r = buf.getChannelData(1)[idx] || 0;
+        } else {
+          l = r = buf.getChannelData(0)[idx] || 0;
+        }
+        const x = cx + r * scale;
+        const y = cy - l * scale;
+        phaseCtx.fillRect(x - 0.5, y - 0.5, 1.5, 1.5);
+
+        // Phase correlation value (sum of L*R)
+        sumPhase += l * r;
+        countPhase++;
+      }
+
+      phaseCtx.shadowBlur = 0;
+
+      // Update phase value display
+      const phaseVal = countPhase > 0 ? (sumPhase / countPhase) : 0;
+      const phaseEl = document.getElementById('phaseValue');
+      if (phaseEl) phaseEl.textContent = phaseVal.toFixed(2);
+    }
+
+  } catch (e) {
+    // Silent fail during render (analyser not ready yet)
+  }
+}
+
+// Resize handlers
+window.addEventListener('resize', () => {
+  if (waveformCanvas) waveformCanvas.width = waveformCanvas.clientWidth;
+  if (phaseCanvas) phaseCanvas.width = phaseCanvas.clientWidth;
+  if (spectrogramCanvas) spectrogramCanvas.width = spectrogramCanvas.clientWidth;
+});
+
 </script>
 </body>
 </html>
