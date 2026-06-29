@@ -3,1941 +3,453 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NoDAW Design System</title>
+<title>CoProducer — AI Production Assistant | Audio Quality Analyzer & Repair</title>
+<meta name="description" content="CoProducer is the AI-powered audio quality analyzer and repair engine used by producers, engineers, and musicians. Analyze LUFS, true peak, dynamic range, stereo width. One-click FFmpeg repair. Reference matching. Free trial.">
+<meta name="keywords" content="AI audio analyzer, audio quality checker, LUFS meter, audio repair AI, stem splitter, mastering tool, audio analysis software, free audio analyzer">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://myaiplug.github.io/coproducer/">
+<meta property="og:title" content="CoProducer — AI Production Assistant">
+<meta property="og:description" content="Professional audio quality analysis, one-click repair, and reference matching.">
+<meta property="og:url" content="https://myaiplug.github.io/coproducer/">
+<meta name="twitter:card" content="summary_large_image">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..900&family=JetBrains+Mono:wght@400..700&family=Rajdhani:wght@500;600;700&family=Syncopate:wght@400;700&family=Manrope:wght@400..700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <style>
-/* ============================================================
-   NoDAW Master Design Tokens
-   ============================================================ */
-:root {
-  --nd-bg-deep: #020617;
-  --nd-bg-surface: #0f172a;
-  --nd-bg-panel: rgba(15, 23, 42, 0.92);
-  --nd-bg-glass: rgba(15, 23, 42, 0.68);
-  --nd-border: rgba(51, 65, 85, 0.5);
-  --nd-border-active: rgba(6, 182, 212, 0.38);
-  --nd-cyan: #22d3ee;
-  --nd-cyan-dark: #06b6d4;
-  --nd-emerald: #10b981;
-  --nd-orange: #f97316;
-  --nd-red: #ef4444;
-  --nd-gold: #facc15;
-  --nd-text-primary: #e2e8f0;
-  --nd-text-secondary: #94a3b8;
-  --nd-text-muted: #64748b;
-  --nd-text-dim: #475569;
-  --nd-radius-sm: 4px;
-  --nd-radius-md: 8px;
-  --nd-radius-lg: 12px;
-  --nd-radius-xl: 16px;
-  --nd-font-mono: 'JetBrains Mono', monospace;
-  --nd-font-tech: 'Rajdhani', sans-serif;
-  --nd-font-body: 'Manrope', sans-serif;
-  --nd-font-display: 'Syncopate', sans-serif;
-  --nd-font-inter: 'Inter', sans-serif;
-}
-
-/* Stem Colors */
-:root {
-  --stem-vocals: #a78bfa;
-  --stem-drums: #f87171;
-  --stem-bass: #60a5fa;
-  --stem-other: #facc15;
-  --stem-piano: #e879f9;
-  --stem-guitar: #fb923c;
-  --stem-kick: #ef4444;
-  --stem-snare: #fbbf24;
-  --stem-toms: #818cf8;
-  --stem-cymbals: #7dd3fc;
-  --stem-instrumental: #34d399;
-}
-
-/* ============================================================
-   THEME 01 — NEWTON ANTIGRAVITY
-   ============================================================ */
-[data-theme='newton-antigravity'] {
-  --theme-bg: #030003;
-  --theme-surface: rgba(18, 8, 24, 0.72);
-  --theme-border: rgba(180, 120, 255, 0.22);
-  --theme-primary: #b56cff;
-  --theme-secondary: #ff4fd8;
-  --theme-accent: #f7d774;
-  --theme-text: #f6f0ff;
-  --theme-muted: rgba(246,240,255,0.58);
-  --theme-glow: rgba(181, 108, 255, 0.15);
-  --theme-gradient: linear-gradient(135deg, #b56cff, #ff4fd8);
-}
-
-/* ============================================================
-   THEME 02 — CHROMATIC NIHILISM
-   ============================================================ */
-[data-theme='chromatic-nihilism'] {
-  --theme-bg: #050005;
-  --theme-surface: rgba(15, 0, 20, 0.78);
-  --theme-border: rgba(255, 0, 128, 0.28);
-  --theme-primary: #ff0080;
-  --theme-secondary: #8000ff;
-  --theme-accent: #00ffff;
-  --theme-warning: #fff000;
-  --theme-text: #ffffff;
-  --theme-muted: rgba(255,255,255,0.55);
-  --theme-glow: rgba(255, 0, 128, 0.15);
-  --theme-gradient: linear-gradient(135deg, #ff0080, #8000ff);
-}
-
-/* ============================================================
-   THEME 03 — ARTIFACT SCAN
-   ============================================================ */
-[data-theme='artifact-scan'] {
-  --theme-bg: #03080a;
-  --theme-surface: rgba(4, 18, 22, 0.76);
-  --theme-border: rgba(0, 255, 170, 0.20);
-  --theme-primary: #00ffaa;
-  --theme-secondary: #00d4ff;
-  --theme-accent: #9eff00;
-  --theme-warning: #ffb000;
-  --theme-text: #dfffee;
-  --theme-muted: rgba(223,255,238,0.52);
-  --theme-glow: rgba(0, 255, 170, 0.12);
-  --theme-gradient: linear-gradient(135deg, #00ffaa, #00d4ff);
-}
-
-/* ============================================================
-   THEME 04 — CRYSTAL PRISM
-   ============================================================ */
-[data-theme='crystal-prism'] {
-  --theme-bg: #020008;
-  --theme-surface: rgba(12, 8, 22, 0.74);
-  --theme-border: rgba(180, 220, 255, 0.22);
-  --theme-primary: #ffffff;
-  --theme-secondary: #a78bfa;
-  --theme-accent: #00ffff;
-  --theme-pink: #ff4fd8;
-  --theme-text: #ffffff;
-  --theme-muted: rgba(255,255,255,0.56);
-  --theme-glow: rgba(167, 139, 250, 0.12);
-  --theme-gradient: linear-gradient(135deg, #ffffff, #a78bfa);
-}
-
-/* ============================================================
-   THEME 05 — OBSIDIAN GLASS (DEFAULT)
-   ============================================================ */
-[data-theme='obsidian-glass'] {
-  --theme-bg: #000000;
-  --theme-surface: rgba(8, 10, 14, 0.82);
-  --theme-surface-2: rgba(18, 20, 28, 0.72);
-  --theme-border: rgba(255, 255, 255, 0.10);
-  --theme-primary: #ffffff;
-  --theme-secondary: #a1a1aa;
-  --theme-accent: #22d3ee;
-  --theme-accent-2: #10b981;
-  --theme-gold: #c8a24a;
-  --theme-text: #f5f5f5;
-  --theme-muted: rgba(255,255,255,0.48);
-  --theme-glow: rgba(34, 211, 238, 0.10);
-  --theme-gradient: linear-gradient(135deg, #22d3ee, #10b981);
-}
-
-/* ============================================================
-   Base Styles
-   ============================================================ */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  font-family: var(--nd-font-body);
-  background: var(--theme-bg, var(--nd-bg-deep));
-  color: var(--theme-text, var(--nd-text-primary));
-  min-height: 100vh;
-  transition: background 0.4s ease, color 0.3s ease;
-}
-
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--nd-border); border-radius: 3px; }
-
-/* ============================================================
-   Layout
-   ============================================================ */
-.app-shell {
-  display: flex;
-  min-height: 100vh;
-}
-
-.sidebar {
-  width: 240px;
-  min-height: 100vh;
-  background: var(--theme-surface, var(--nd-bg-surface));
-  border-right: 1px solid var(--theme-border, var(--nd-border));
-  padding: 28px 20px;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.sidebar-brand {
-  font-family: var(--nd-font-tech);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--theme-text);
-  letter-spacing: 1px;
-  margin-bottom: 4px;
-}
-
-.sidebar-tag {
-  font-size: 11px;
-  color: var(--theme-muted);
-  font-family: var(--nd-font-mono);
-  margin-bottom: 32px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--nd-radius-md);
-  color: var(--theme-muted);
-  font-size: 13px;
-  font-family: var(--nd-font-mono);
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none; background: transparent;
-  text-align: left; width: 100%;
-}
-
-.nav-item:hover {
-  background: var(--theme-surface);
-  color: var(--theme-text);
-}
-
-.nav-item.active {
-  background: var(--theme-glow);
-  color: var(--theme-primary);
-  border: 1px solid var(--theme-border);
-}
-
-.nav-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--nd-text-dim);
-  flex-shrink: 0;
-}
-
-.nav-item.active .nav-dot { background: var(--theme-accent, var(--nd-cyan)); }
-
-.main-area {
-  flex: 1;
-  padding: 36px 40px;
-  overflow-y: auto;
-}
-
-/* ============================================================
-   Panel
-   ============================================================ */
-.panel {
-  background: var(--theme-surface, var(--nd-bg-panel));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--theme-border, var(--nd-border));
-  border-radius: var(--nd-radius-lg);
-  box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 40px var(--theme-glow, transparent);
-  padding: 20px;
-}
-
-.panel-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--nd-font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--theme-muted);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--theme-border, var(--nd-border));
-}
-
-.led {
-  display: inline-block;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--theme-accent, var(--nd-cyan));
-  box-shadow: 0 0 8px var(--theme-accent, var(--nd-cyan));
-  flex-shrink: 0;
-}
-
-.led.success { background: var(--nd-emerald); box-shadow: 0 0 8px var(--nd-emerald); }
-.led.warning { background: var(--nd-orange); box-shadow: 0 0 8px var(--nd-orange); }
-.led.error { background: var(--nd-red); box-shadow: 0 0 8px var(--nd-red); }
-
-/* ============================================================
-   Buttons
-   ============================================================ */
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  font-family: var(--nd-font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 10px 20px;
-  border-radius: var(--nd-radius-md);
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.btn-primary {
-  background: #164e63;
-  border-color: var(--nd-cyan-dark);
-  color: #ecfeff;
-  box-shadow: 0 4px 20px rgba(8,145,178,0.3);
-}
-.btn-primary:hover {
-  background: #155e75;
-  box-shadow: 0 6px 25px rgba(8,145,178,0.4);
-}
-
-.btn-secondary {
-  background: transparent;
-  border-color: var(--nd-border);
-  color: var(--nd-text-secondary);
-}
-.btn-secondary:hover { border-color: var(--nd-cyan); color: var(--nd-text-primary); }
-
-.btn-danger {
-  background: transparent;
-  border-color: rgba(239,68,68,0.3);
-  color: #f87171;
-}
-.btn-danger:hover { background: rgba(239,68,68,0.1); }
-
-.btn-sm { padding: 6px 14px; font-size: 10px; }
-.btn-lg { padding: 14px 28px; font-size: 14px; }
-
-.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
-
-/* ============================================================
-   Cards & Grid
-   ============================================================ */
-.card-grid {
-  display: grid;
-  gap: 16px;
-}
-
-.card-grid-2 { grid-template-columns: repeat(2, 1fr); }
-.card-grid-3 { grid-template-columns: repeat(3, 1fr); }
-.card-grid-4 { grid-template-columns: repeat(4, 1fr); }
-
-.metric-card {
-  background: var(--theme-surface, var(--nd-bg-panel));
-  border: 1px solid var(--theme-border, var(--nd-border));
-  border-radius: var(--nd-radius-md);
-  padding: 16px;
-  text-align: center;
-  transition: border-color 0.2s;
-}
-.metric-card:hover { border-color: var(--theme-accent, var(--nd-cyan)); }
-
-.metric-label {
-  font-family: var(--nd-font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--theme-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 8px;
-}
-
-.metric-value {
-  font-family: var(--nd-font-tech);
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--theme-text);
-}
-
-.metric-unit {
-  font-family: var(--nd-font-mono);
-  font-size: 11px;
-  color: var(--theme-muted);
-}
-
-/* ============================================================
-   Status Badge
-   ============================================================ */
-.badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--nd-font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.badge-cyan { background: rgba(6,182,212,0.12); color: var(--nd-cyan); }
-.badge-emerald { background: rgba(16,185,129,0.12); color: var(--nd-emerald); }
-.badge-orange { background: rgba(249,115,22,0.12); color: var(--nd-orange); }
-.badge-red { background: rgba(239,68,68,0.12); color: var(--nd-red); }
-.badge-gold { background: rgba(250,204,21,0.12); color: var(--nd-gold); }
-
-/* ============================================================
-   Toggle
-   ============================================================ */
-.toggle {
-  position: relative;
-  display: inline-flex; align-items: center;
-  cursor: pointer;
-  gap: 10px;
-  font-family: var(--nd-font-mono);
-  font-size: 11px;
-  color: var(--nd-text-secondary);
-}
-
-.toggle-track {
-  width: 36px; height: 20px;
-  background: var(--nd-bg-deep);
-  border: 1px solid var(--nd-border);
-  border-radius: 999px;
-  transition: all 0.2s;
-  position: relative;
-}
-
-.toggle-track::after {
-  content: '';
-  position: absolute;
-  width: 14px; height: 14px;
-  background: var(--nd-text-dim);
-  border-radius: 50%;
-  top: 2px; left: 2px;
-  transition: all 0.2s;
-}
-
-.toggle input:checked + .toggle-track {
-  background: rgba(6,182,212,0.2);
-  border-color: var(--nd-cyan-dark);
-}
-
-.toggle input:checked + .toggle-track::after {
-  left: 18px;
-  background: var(--nd-cyan);
-  box-shadow: 0 0 8px var(--nd-cyan);
-}
-
-.toggle input { display: none; }
-
-/* ============================================================
-   Slider
-   ============================================================ */
-.slider-group { display: flex; flex-direction: column; gap: 6px; }
-
-.slider-header {
-  display: flex; justify-content: space-between;
-  font-family: var(--nd-font-mono);
-  font-size: 10px;
-  color: var(--nd-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 4px;
-  background: var(--nd-bg-deep);
-  border-radius: 2px;
-  outline: none;
-  border: 1px solid var(--nd-border);
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px; height: 14px;
-  background: var(--theme-accent, var(--nd-cyan));
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 0 10px var(--theme-accent, var(--nd-cyan));
-}
-
-/* ============================================================
-   Input
-   ============================================================ */
-.nd-input {
-  background: var(--nd-bg-deep);
-  border: 1px solid var(--nd-border);
-  border-radius: var(--nd-radius-sm);
-  color: var(--nd-text-primary);
-  font-family: var(--nd-font-mono);
-  font-size: 12px;
-  padding: 8px 12px;
-  outline: none;
-  width: 100%;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.nd-input:focus {
-  border-color: var(--nd-cyan-dark);
-  box-shadow: 0 0 10px rgba(34,211,238,0.15);
-}
-
-.nd-input::placeholder { color: var(--nd-text-dim); }
-
-/* ============================================================
-   Upload Zone
-   ============================================================ */
-.upload-zone {
-  border: 1.5px dashed var(--theme-border, var(--nd-border));
-  border-radius: var(--nd-radius-lg);
-  padding: 48px 24px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  background: var(--theme-surface, var(--nd-bg-panel));
-}
-
-.upload-zone:hover {
-  border-color: var(--theme-accent, var(--nd-cyan));
-  background: var(--theme-glow);
-}
-
-.upload-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
-  color: var(--theme-muted);
-}
-
-.upload-title {
-  font-family: var(--nd-font-tech);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--theme-text);
-  margin-bottom: 4px;
-}
-
-.upload-sub {
-  font-size: 12px;
-  color: var(--theme-muted);
-}
-
-/* ============================================================
-   Waveform Card
-   ============================================================ */
-.waveform-visual {
-  height: 60px;
-  background: var(--nd-bg-deep);
-  border-radius: var(--nd-radius-sm);
-  border: 1px solid var(--nd-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
-}
-
-.waveform-bars {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  width: 100%;
-  height: 100%;
-  padding: 8px 4px;
-}
-
-.waveform-bar {
-  flex: 1;
-  background: var(--theme-accent, var(--nd-cyan));
-  border-radius: 1px;
-  opacity: 0.6;
-  transition: height 0.1s;
-  min-height: 4px;
-}
-
-/* ============================================================
-   Stem Player Card
-   ============================================================ */
-.stem-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--nd-border);
-}
-
-.stem-row:last-child { border-bottom: none; }
-
-.stem-color {
-  width: 4px; height: 28px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-
-.stem-info { flex: 1; }
-
-.stem-name {
-  font-family: var(--nd-font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.stem-status {
-  font-size: 10px;
-  color: var(--theme-muted);
-}
-
-.stem-toggle {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  border: 1px solid var(--nd-border);
-  background: transparent;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
-  color: var(--nd-text-dim);
-  font-size: 14px;
-}
-
-.stem-toggle.active {
-  background: var(--theme-accent, var(--nd-cyan));
-  border-color: var(--theme-accent, var(--nd-cyan));
-  color: #000;
-}
-
-/* ============================================================
-   Price Card
-   ============================================================ */
-.price-card {
-  background: var(--theme-surface, var(--nd-bg-panel));
-  border: 1px solid var(--theme-border, var(--nd-border));
-  border-radius: var(--nd-radius-lg);
-  padding: 28px 24px;
-  text-align: center;
-  transition: all 0.3s;
-}
-
-.price-card.featured {
-  border-color: var(--theme-accent, var(--nd-cyan));
-  box-shadow: 0 0 30px var(--theme-glow);
-  position: relative;
-}
-
-.price-card.featured::before {
-  content: 'BEST VALUE';
-  position: absolute;
-  top: -10px; left: 50%;
-  transform: translateX(-50%);
-  background: var(--theme-gradient);
-  color: #fff;
-  font-family: var(--nd-font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  padding: 3px 14px;
-  border-radius: 999px;
-  letter-spacing: 1px;
-}
-
-.price-amount {
-  font-family: var(--nd-font-tech);
-  font-size: 42px;
-  font-weight: 700;
-  color: var(--theme-text);
-}
-
-.price-period {
-  font-size: 12px;
-  color: var(--theme-muted);
-  margin-bottom: 20px;
-}
-
-.price-features {
-  list-style: none;
-  text-align: left;
-  margin: 20px 0;
-}
-
-.price-features li {
-  padding: 6px 0;
-  font-size: 13px;
-  color: var(--nd-text-secondary);
-  display: flex; align-items: center; gap: 8px;
-}
-
-.price-features li::before {
-  content: '>';
-  font-family: var(--nd-font-mono);
-  color: var(--theme-accent, var(--nd-cyan));
-  font-weight: 700;
-}
-
-/* ============================================================
-   Section Headers
-   ============================================================ */
-.section-title {
-  font-family: var(--nd-font-display);
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 24px;
-  background: var(--theme-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.section-sub {
-  font-size: 14px;
-  color: var(--theme-muted);
-  margin-bottom: 32px;
-  font-family: var(--nd-font-body);
-  max-width: 600px;
-}
-
-/* ============================================================
-   Settings Dropdown
-   ============================================================ */
-.settings-trigger {
-  position: fixed;
-  top: 16px;
-  right: 20px;
-  z-index: 100;
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--nd-border);
-  background: var(--theme-surface, var(--nd-bg-panel));
-  backdrop-filter: blur(12px);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  color: var(--theme-muted);
-  transition: all 0.2s;
-}
-.settings-trigger:hover {
-  border-color: var(--theme-accent, var(--nd-cyan));
-  color: var(--theme-accent, var(--nd-cyan));
-  box-shadow: 0 0 20px var(--theme-glow);
-}
-
-.settings-dropdown {
-  position: fixed;
-  top: 56px;
-  right: 20px;
-  z-index: 99;
-  background: var(--theme-surface, var(--nd-bg-panel));
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--theme-border, var(--nd-border));
-  border-radius: var(--nd-radius-lg);
-  padding: 16px;
-  min-width: 220px;
-  box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-}
-.settings-dropdown.open { display: flex; }
-
-.settings-label {
-  font-family: var(--nd-font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--theme-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 8px 0 4px 0;
-  padding: 0 8px;
-}
-
-.theme-btn {
-  font-family: var(--nd-font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 8px 12px;
-  border-radius: var(--nd-radius-sm);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--nd-text-muted);
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: left;
-}
-
-.theme-btn:hover { background: var(--theme-glow); color: var(--theme-text); }
-.theme-btn.active {
-  border-color: var(--theme-border);
-  background: var(--theme-glow);
-  color: var(--theme-primary);
-}
-
-.theme-btn .theme-dot {
-  display: inline-block;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  margin-right: 8px;
-}
-
-/* ============================================================
-   Score Ring
-   ============================================================ */
-.score-ring-container {
-  display: flex; align-items: center; justify-content: center;
-  position: relative;
-  width: 180px; height: 180px;
-}
-
-.score-ring-svg {
-  transform: rotate(-90deg);
-  width: 180px; height: 180px;
-}
-
-.score-ring-bg {
-  fill: none;
-  stroke: var(--nd-border);
-  stroke-width: 8;
-}
-
-.score-ring-progress {
-  fill: none;
-  stroke: var(--theme-accent, var(--nd-cyan));
-  stroke-width: 8;
-  stroke-linecap: round;
-  stroke-dasharray: 502;
-  transition: stroke-dashoffset 1s ease, stroke 0.3s;
-}
-
-.score-ring-center {
-  position: absolute;
-  text-align: center;
-}
-
-.score-ring-number {
-  font-family: var(--nd-font-tech);
-  font-size: 44px;
-  font-weight: 700;
-  color: var(--theme-text);
-  line-height: 1;
-}
-
-.score-ring-label {
-  font-family: var(--nd-font-mono);
-  font-size: 9px;
-  color: var(--theme-muted);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-top: 4px;
-}
-
-/* ============================================================
-   Bento Grid
-   ============================================================ */
-.bento {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: auto;
-}
-
-.bento-wide { grid-column: 1 / -1; }
-
-.bento-card {
-  background: var(--theme-surface, var(--nd-bg-panel));
-  border: 1px solid var(--theme-border, var(--nd-border));
-  border-radius: var(--nd-radius-lg);
-  padding: 24px;
-  transition: border-color 0.3s;
-}
-
-.bento-card:hover { border-color: var(--theme-accent, var(--nd-cyan)); }
-
-/* ============================================================
-   Spacing Utilities
-   ============================================================ */
-.mb-8 { margin-bottom: 8px; }
-.mb-16 { margin-bottom: 16px; }
-.mb-24 { margin-bottom: 24px; }
-.mb-32 { margin-bottom: 32px; }
-.mb-48 { margin-bottom: 48px; }
-.gap-8 { gap: 8px; }
-.gap-16 { gap: 16px; }
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.flex-1 { flex: 1; }
-.w-full { width: 100%; }
-
-/* ============================================================
-   Animations
-   ============================================================ */
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
-}
-
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in { animation: fadeIn 0.4s ease-out; }
-.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
-
-/* ============================================================
-   Responsive
-   ============================================================ */
-@media (max-width: 1024px) {
-  .card-grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .bento { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 768px) {
-  .sidebar { width: 60px; padding: 20px 10px; }
-  .sidebar-brand { font-size: 14px; }
-  .sidebar-tag, .nav-item span { display: none; }
-  .main-area { padding: 20px; }
-  .card-grid-2, .card-grid-3, .card-grid-4 { grid-template-columns: 1fr; }
-}
-
-/* Canvas visualizations */
-.viz-canvas {
-  background: var(--nd-bg-deep);
-  border: 1px solid var(--nd-border);
-  border-radius: var(--nd-radius-sm);
-  width: 100%;
-  display: block;
-}
-
-.viz-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: 1fr 1fr 1fr;
-}
-
-@media (max-width: 900px) {
-  .viz-grid { grid-template-columns: 1fr; }
-}
-
-.freq-band-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 3px 0;
-  font-family: var(--nd-font-mono);
-  font-size: 10px;
-}
-
-.freq-band-bar {
-  height: 8px;
-  border-radius: 2px;
-  transition: width 0.08s ease, background 0.3s;
-  min-width: 2px;
-}
-
-.freq-band-label { width: 70px; color: var(--theme-muted); flex-shrink: 0; }
-.freq-band-value { width: 40px; text-align: right; color: var(--theme-text); font-family: var(--nd-font-mono); font-size: 10px; }
-
-/* Phase scope dot */
-.phase-dot {
-  position: absolute;
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: var(--theme-accent, var(--nd-cyan));
-  box-shadow: 0 0 6px var(--theme-accent, var(--nd-cyan));
-  pointer-events: none;
-}
-
-/* Scanline overlay on hover for panels */
-.panel-scan {
-  position: relative;
-  overflow: hidden;
-}
-
-.panel-scan::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--theme-accent, var(--nd-cyan)), transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.panel-scan:hover::after {
-  opacity: 0.5;
-  animation: scanline 1.5s linear infinite;
-}
+:root{--nd-bg-deep:#020617;--nd-bg-surface:#0f172a;--nd-bg-panel:rgba(15,23,42,0.92);--nd-bg-glass:rgba(15,23,42,0.68);--nd-border:rgba(51,65,85,0.5);--nd-border-active:rgba(6,182,212,0.38);--nd-cyan:#22d3ee;--nd-cyan-dark:#06b6d4;--nd-emerald:#10b981;--nd-orange:#f97316;--nd-red:#ef4444;--nd-gold:#facc15;--nd-text-primary:#e2e8f0;--nd-text-secondary:#94a3b8;--nd-text-muted:#64748b;--nd-text-dim:#475569;--nd-radius-sm:4px;--nd-radius-md:8px;--nd-radius-lg:12px;--nd-radius-xl:16px;--nd-font-mono:'JetBrains Mono',monospace;--nd-font-tech:'Rajdhani',sans-serif;--nd-font-body:'Manrope',sans-serif;--nd-font-display:'Syncopate',sans-serif;--nd-font-inter:'Inter',sans-serif;}
+[data-theme=obsidian-glass]{--theme-bg:#000;--theme-surface:rgba(8,10,14,0.82);--theme-border:rgba(255,255,255,0.10);--theme-primary:#fff;--theme-secondary:#a1a1aa;--theme-accent:#22d3ee;--theme-accent-2:#10b981;--theme-gold:#c8a24a;--theme-text:#f5f5f5;--theme-muted:rgba(255,255,255,0.48);--theme-glow:rgba(34,211,238,0.10);--theme-gradient:linear-gradient(135deg,#22d3ee,#10b981);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--nd-font-body);background:var(--theme-bg,#020617);color:var(--theme-text,#e2e8f0);overflow-x:hidden;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--nd-border);border-radius:3px;}
+a{color:var(--nd-cyan);text-decoration:none;}
+
+/* Navigation */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 40px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--nd-border);}
+.nav-brand{font-family:var(--nd-font-tech);font-size:20px;font-weight:700;letter-spacing:1px;color:var(--theme-text);}
+.nav-links{display:flex;gap:24px;align-items:center;}
+.nav-links a{font-family:var(--nd-font-mono);font-size:11px;color:var(--theme-muted);text-transform:uppercase;letter-spacing:1px;transition:color 0.2s;}
+.nav-links a:hover{color:var(--nd-cyan);}
+.nav-cta{padding:8px 20px;border-radius:var(--nd-radius-md);background:var(--nd-cyan-dark);color:#fff!important;font-weight:700;border:none;cursor:pointer;font-family:var(--nd-font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.2s;}
+.nav-cta:hover{background:var(--nd-cyan);box-shadow:0 0 30px rgba(34,211,238,0.3);}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden;}
+.hero-ambient{position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(circle,var(--theme-glow) 0%,transparent 70%);pointer-events:none;}
+.hero-eyebrow{font-family:var(--nd-font-mono);font-size:11px;color:var(--nd-cyan);letter-spacing:4px;margin-bottom:24px;text-transform:uppercase;}
+.hero-title{font-family:var(--nd-font-display);font-size:clamp(36px,7vw,80px);font-weight:700;letter-spacing:2px;line-height:1.05;margin-bottom:20px;}
+.hero-title span{background:var(--theme-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:clamp(14px,2vw,18px);color:var(--theme-muted);max-width:560px;margin-bottom:40px;line-height:1.6;}
+.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--nd-font-mono);font-size:12px;font-weight:700;padding:14px 28px;border-radius:var(--nd-radius-md);cursor:pointer;transition:all 0.3s;border:1px solid transparent;text-transform:uppercase;letter-spacing:0.5px;}
+.btn-primary{background:#164e63;border-color:var(--nd-cyan-dark);color:#ecfeff;box-shadow:0 4px 20px rgba(8,145,178,0.3);}
+.btn-primary:hover{background:#155e75;box-shadow:0 6px 30px rgba(8,145,178,0.5);transform:translateY(-2px);}
+.btn-secondary{background:transparent;border-color:var(--nd-border);color:var(--nd-text-secondary);}
+.btn-secondary:hover{border-color:var(--nd-cyan);color:var(--nd-text-primary);transform:translateY(-2px);}
+.btn-lg{padding:16px 36px;font-size:13px;}
+.hero-metrics{display:flex;gap:40px;margin-top:60px;flex-wrap:wrap;justify-content:center;}
+.hero-metric{text-align:center;}
+.hero-metric-value{font-family:var(--nd-font-tech);font-size:28px;font-weight:700;color:var(--nd-cyan);}
+.hero-metric-label{font-size:11px;color:var(--theme-muted);font-family:var(--nd-font-mono);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px;}
+
+/* Sections */
+section{padding:100px 24px;max-width:1200px;margin:0 auto;}
+.section-title{font-family:var(--nd-font-display);font-size:clamp(24px,4vw,42px);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;text-align:center;}
+.section-title span{background:var(--theme-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.section-sub{font-size:16px;color:var(--theme-muted);text-align:center;max-width:600px;margin:0 auto 60px;line-height:1.6;}
+
+/* Feature Cards */
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;}
+.feature-card{background:var(--theme-surface,var(--nd-bg-panel));border:1px solid var(--theme-border,var(--nd-border));border-radius:var(--nd-radius-lg);padding:32px 28px;transition:all 0.4s;position:relative;overflow:hidden;}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--theme-gradient);opacity:0;transition:opacity 0.4s;}
+.feature-card:hover{transform:translateY(-4px);border-color:var(--nd-cyan);box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.feature-card:hover::before{opacity:1;}
+.feature-icon{font-size:28px;margin-bottom:16px;}
+.feature-card h3{font-family:var(--nd-font-tech);font-size:18px;font-weight:600;margin-bottom:8px;}
+.feature-card p{font-size:13px;color:var(--theme-muted);line-height:1.6;}
+
+/* Score Ring Demo */
+.score-demo{display:flex;justify-content:center;align-items:center;gap:60px;flex-wrap:wrap;padding:40px;background:var(--theme-surface,var(--nd-bg-panel));border:1px solid var(--theme-border,var(--nd-border));border-radius:var(--nd-radius-xl);margin-bottom:60px;}
+.score-ring-container{position:relative;width:200px;height:200px;}
+.score-ring-svg{transform:rotate(-90deg);width:200px;height:200px;}
+.score-ring-bg{fill:none;stroke:var(--nd-border);stroke-width:8;}
+.score-ring-progress{fill:none;stroke:var(--nd-cyan);stroke-width:8;stroke-linecap:round;stroke-dasharray:565;transition:stroke-dashoffset 1.5s ease;}
+.score-ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.score-ring-number{font-family:var(--nd-font-tech);font-size:48px;font-weight:700;color:var(--theme-text);}
+.score-ring-label{font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);letter-spacing:1.5px;text-transform:uppercase;}
+.score-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-width:260px;}
+.score-stat{padding:12px 16px;background:rgba(15,23,42,0.6);border-radius:var(--nd-radius-md);border:1px solid var(--nd-border);}
+.score-stat-label{font-family:var(--nd-font-mono);font-size:9px;color:var(--theme-muted);text-transform:uppercase;letter-spacing:0.5px;}
+.score-stat-value{font-family:var(--nd-font-tech);font-size:20px;font-weight:700;margin-top:2px;}
+
+/* Pricing */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+.price-card{background:var(--theme-surface,var(--nd-bg-panel));border:1px solid var(--theme-border,var(--nd-border));border-radius:var(--nd-radius-lg);padding:32px 24px;text-align:center;transition:all 0.4s;position:relative;}
+.price-card.featured{border-color:var(--nd-cyan);box-shadow:0 0 40px var(--theme-glow);transform:scale(1.02);}
+.price-card.featured::before{content:'BEST VALUE';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--theme-gradient);color:#fff;font-family:var(--nd-font-mono);font-size:9px;font-weight:700;padding:3px 14px;border-radius:999px;letter-spacing:1px;}
+.price-name{font-family:var(--nd-font-tech);font-size:14px;font-weight:600;color:var(--theme-muted);letter-spacing:1px;margin-bottom:12px;}
+.price-amount{font-family:var(--nd-font-tech);font-size:42px;font-weight:700;color:var(--theme-text);}
+.price-period{font-size:12px;color:var(--theme-muted);margin-bottom:20px;}
+.price-features{list-style:none;text-align:left;margin:20px 0;}
+.price-features li{padding:6px 0;font-size:13px;color:var(--nd-text-secondary);display:flex;align-items:center;gap:8px;}
+.price-features li::before{content:'>';font-family:var(--nd-font-mono);color:var(--nd-cyan);font-weight:700;}
+
+/* Comparison Table */
+.comparison-table{width:100%;border-collapse:separate;border-spacing:0;font-family:var(--nd-font-mono);font-size:12px;}
+.comparison-table th,.comparison-table td{padding:14px 20px;text-align:center;border-bottom:1px solid var(--nd-border);}
+.comparison-table th{font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--theme-muted);font-size:10px;}
+.comparison-table td{color:var(--nd-text-secondary);}
+.comparison-table tr:hover td{background:var(--theme-glow);}
+.comparison-table .highlight{color:var(--nd-emerald);font-weight:700;}
+.comparison-table .muted{color:var(--nd-text-dim);}
+
+/* Guide Cards */
+.guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+.guide-card{padding:28px 24px;background:var(--theme-surface,var(--nd-bg-panel));border:1px solid var(--theme-border,var(--nd-border));border-radius:var(--nd-radius-lg);transition:all 0.3s;}
+.guide-card:hover{transform:translateY(-3px);border-color:var(--nd-cyan);}
+.guide-card h3{font-family:var(--nd-font-tech);font-size:16px;margin-bottom:6px;}
+.guide-card p{font-size:12px;color:var(--theme-muted);line-height:1.6;margin-bottom:12px;}
+.guide-tag{display:inline-block;padding:2px 10px;border-radius:999px;font-family:var(--nd-font-mono);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.guide-tag.beginner{background:rgba(16,185,129,0.12);color:var(--nd-emerald);}
+.guide-tag.advanced{background:rgba(34,211,238,0.12);color:var(--nd-cyan);}
+
+/* Blog */
+.blog-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;}
+.blog-card{border:1px solid var(--nd-border);border-radius:var(--nd-radius-lg);overflow:hidden;transition:all 0.3s;}
+.blog-card:hover{transform:translateY(-4px);border-color:var(--nd-cyan);}
+.blog-card-img{height:180px;background:var(--theme-surface);display:flex;align-items:center;justify-content:center;font-size:40px;}
+.blog-card-body{padding:20px;}
+.blog-card-date{font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);}
+.blog-card h3{font-family:var(--nd-font-body);font-size:16px;font-weight:600;margin:6px 0;line-height:1.3;}
+.blog-card p{font-size:12px;color:var(--theme-muted);line-height:1.5;}
+
+/* CTA */
+.cta-section{text-align:center;padding:100px 24px;position:relative;}
+.cta-ambient{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--theme-glow) 0%,transparent 70%);pointer-events:none;}
+
+/* Footer */
+footer{padding:40px;text-align:center;border-top:1px solid var(--nd-border);}
+footer p{font-size:11px;color:var(--theme-muted);font-family:var(--nd-font-mono);}
+.footer-links{display:flex;gap:20px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;}
+.footer-links a{font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);text-transform:uppercase;letter-spacing:0.5px;}
+
+/* Parallax */
+.parallax-layer{position:relative;will-change:transform;}
+
+/* Mobile */
+@media(max-width:768px){nav{padding:12px 20px;}.nav-links{display:none;}.hero{padding:100px 20px 60px;}.score-demo{flex-direction:column;gap:30px;}}
 </style>
 </head>
 <body>
 
-<div class="app-shell">
-  <!-- Settings gear + theme dropdown -->
-  <button class="settings-trigger" onclick="toggleSettings()" title="Settings">&#9881;</button>
-  <div class="settings-dropdown" id="settingsDropdown">
-    <div class="settings-label">Theme</div>
-    <button class="theme-btn active" data-theme="obsidian-glass" onclick="setTheme('obsidian-glass')"><span class="theme-dot" style="background:#22d3ee"></span>Obsidian Glass</button>
-    <button class="theme-btn" data-theme="newton-antigravity" onclick="setTheme('newton-antigravity')"><span class="theme-dot" style="background:#b56cff"></span>Newton Antigravity</button>
-    <button class="theme-btn" data-theme="chromatic-nihilism" onclick="setTheme('chromatic-nihilism')"><span class="theme-dot" style="background:#ff0080"></span>Chromatic Nihilism</button>
-    <button class="theme-btn" data-theme="artifact-scan" onclick="setTheme('artifact-scan')"><span class="theme-dot" style="background:#00ffaa"></span>Artifact Scan</button>
-    <button class="theme-btn" data-theme="crystal-prism" onclick="setTheme('crystal-prism')"><span class="theme-dot" style="background:#a78bfa"></span>Crystal Prism</button>
+<!-- Navigation -->
+<nav>
+  <div class="nav-brand">NoDAW</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="guides/">Guides</a>
+    <a href="comparisons/">Compare</a>
+    <a href="blog/">Blog</a>
+    <a href="https://github.com/myaiplug/coproducer" target="_blank">GitHub</a>
+    <a href="#download" class="nav-cta">Download Free</a>
   </div>
+</nav>
 
-  <!-- Sidebar -->
-  <nav class="sidebar">
-    <div class="sidebar-brand">NoDAW</div>
-    <div class="sidebar-tag">Design System v3.2</div>
-    <div class="sidebar-nav">
-      <button class="nav-item active" onclick="scrollToSection('dashboard')">
-        <span class="nav-dot"></span><span>Dashboard</span>
-      </button>
-      <button class="nav-item" onclick="scrollToSection('components')">
-        <span class="nav-dot"></span><span>Components</span>
-      </button>
-      <button class="nav-item" onclick="scrollToSection('abtest')">
-        <span class="nav-dot"></span><span>A/B Test</span>
-      </button>
-      <button class="nav-item" onclick="scrollToSection('metadata')">
-        <span class="nav-dot"></span><span>Metadata</span>
-      </button>
-      <button class="nav-item" onclick="scrollToSection('audiolab')">
-        <span class="nav-dot"></span><span>Audio Lab</span>
-      </button>
-      <a href="pricing.html" style="text-decoration:none">
-        <button class="nav-item"><span class="nav-dot"></span><span>Pricing</span></button>
-      </a>
-      <button class="nav-item" onclick="scrollToSection('landing')">
-        <span class="nav-dot"></span><span>Landing</span>
-      </button>
+<!-- Hero -->
+<section class="hero" id="hero">
+  <div class="hero-ambient"></div>
+  <div class="hero-eyebrow" data-anim="fade-up">AI-Powered Audio Analysis</div>
+  <h1 class="hero-title" data-anim="fade-up">Your Mix.<br><span>Reviewed. Repaired. Released.</span></h1>
+  <p class="hero-sub" data-anim="fade-up">Professional audio quality analysis, one-click repair, and reference matching. CoProducer is the AI Production Assistant used by engineers, producers, and musicians worldwide.</p>
+  <div class="hero-cta" data-anim="fade-up">
+    <a href="#download" class="btn btn-primary btn-lg">Download Free</a>
+    <a href="comparisons/" class="btn btn-secondary btn-lg">See How We Compare</a>
+  </div>
+  <div class="hero-metrics" data-anim="fade-up">
+    <div class="hero-metric"><div class="hero-metric-value">14</div><div class="hero-metric-label">Audio Metrics</div></div>
+    <div class="hero-metric"><div class="hero-metric-value">3</div><div class="hero-metric-label">Repair Backends</div></div>
+    <div class="hero-metric"><div class="hero-metric-value">10</div><div class="hero-metric-label">Smart Presets</div></div>
+    <div class="hero-metric"><div class="hero-metric-value">100%</div><div class="hero-metric-label">Free to Try</div></div>
+  </div>
+</section>
+
+<!-- Score Demo -->
+<section>
+  <h2 class="section-title" data-anim="fade-up">See Your <span>Mix Score</span></h2>
+  <p class="section-sub" data-anim="fade-up">CoProducer analyzes your audio across 5 critical modules: technical integrity, loudness, noise, spectral balance, and stereo phase.</p>
+  <div class="score-demo" data-anim="fade-up">
+    <div class="score-ring-container" id="scoreRing">
+      <svg class="score-ring-svg" viewBox="0 0 200 200">
+        <circle class="score-ring-bg" cx="100" cy="100" r="90"/>
+        <circle class="score-ring-progress" id="scoreArc" cx="100" cy="100" r="90" stroke-dashoffset="565"/>
+      </svg>
+      <div class="score-ring-center">
+        <div class="score-ring-number" id="scoreNum">87</div>
+        <div class="score-ring-label">Mix Score</div>
+      </div>
     </div>
-    <button class="theme-btn w-full" onclick="document.documentElement.setAttribute('data-theme','obsidian-glass');updateThemeUI()" style="margin-top:auto;text-align:center">Reset Theme</button>
-  </nav>
+    <div class="score-stats">
+      <div class="score-stat"><div class="score-stat-label">LUFS</div><div class="score-stat-value" style="color:var(--nd-emerald)">-14.2</div></div>
+      <div class="score-stat"><div class="score-stat-label">True Peak</div><div class="score-stat-value" style="color:var(--nd-emerald)">-1.2</div></div>
+      <div class="score-stat"><div class="score-stat-label">Dynamic Range</div><div class="score-stat-value" style="color:var(--nd-emerald)">11.3</div></div>
+      <div class="score-stat"><div class="score-stat-label">Phase</div><div class="score-stat-value" style="color:var(--nd-cyan)">0.84</div></div>
+    </div>
+  </div>
+</section>
 
-  <!-- Main -->
-  <main class="main-area">
+<!-- Features -->
+<section id="features">
+  <h2 class="section-title" data-anim="fade-up">Everything You Need to <span>Perfect Your Sound</span></h2>
+  <p class="section-sub" data-anim="fade-up">From quick quality checks to deep surgical repair, CoProducer gives you professional-grade audio tools in one application.</p>
+  <div class="feature-grid">
+    <div class="feature-card" data-anim="fade-up">
+      <div class="feature-icon">&#9835;</div>
+      <h3>Quality Analyzer</h3>
+      <p>Measure LUFS, true peak, dynamic range, stereo width, phase correlation, noise floor, clipping, and spectral balance. Strict scoring that doesn't inflate bad audio.</p>
+    </div>
+    <div class="feature-card" data-anim="fade-up">
+      <div class="feature-icon">&#9881;</div>
+      <h3>One-Click Repair</h3>
+      <p>Remove clicks, pops, clipping, hiss, hum, and rumble with a single click. CoProducer builds an adaptive FFmpeg/Pedalboard/SoX chain and runs it automatically.</p>
+    </div>
+    <div class="feature-card" data-anim="fade-up">
+      <div class="feature-icon">&#8646;</div>
+      <h3>Reference Matching</h3>
+      <p>Compare your mix to a professional reference track. Get a similarity score, metric-by-metric differences, and automated EQ matching suggestions.</p>
+    </div>
+    <div class="feature-card" data-anim="fade-up">
+      <div class="feature-icon">&#9776;</div>
+      <h3>A/B Testing</h3>
+      <p>Toggle between original and repaired audio instantly. Built-in player with waveform visualization lets you hear the difference before committing.</p>
+    </div>
+    <div class="feature-card" data-anim="fade-up">
+      <div class="feature-icon">&#9733;</div>
+      <h3>Smart Presets</h3>
+      <p>Auto-detect the best repair strategy with 10 presets: podcast, vocal, music, stem, old MP3, YouTube rip, cassette, vinyl, mastering, and auto mode.</p>
+    </div>
+    <div class="feature-card" data-anim="fade-up">
+      <div class="feature-icon">&#9784;</div>
+      <h3>Multi-Backend Engine</h3>
+      <p>Choose between FFmpeg (fast), SoX (noise profiling), Pedalboard (musical DSP), or Hybrid (all three). Auto-backend selects the best tool for your audio.</p>
+    </div>
+  </div>
+</section>
 
-    <!-- ============================================================
-         DASHBOARD DEMO
-         ============================================================ -->
-    <section id="dashboard" class="mb-48">
-      <h1 class="section-title">NoDAW Command Center</h1>
-      <p class="section-sub">Cyber-HUD dashboard interface with real-time analysis metrics, waveform display, and system status.</p>
+<!-- Comparison Table -->
+<section>
+  <h2 class="section-title" data-anim="fade-up">CoProducer vs <span>The Competition</span></h2>
+  <p class="section-sub" data-anim="fade-up">See how CoProducer compares to LANDR, Moises, iZotope RX, and Adobe Podcast.</p>
+  <div style="overflow-x:auto" data-anim="fade-up">
+    <table class="comparison-table">
+      <tr><th>Feature</th><th>CoProducer</th><th>LANDR</th><th>Moises</th><th>iZotope RX</th></tr>
+      <tr><td>Free Tier</td><td class="highlight">Full features</td><td>Limited</td><td>Limited</td><td>No free tier</td></tr>
+      <tr><td>Audio Quality Score</td><td class="highlight">5 modules</td><td>Basic</td><td>None</td><td>Metering only</td></tr>
+      <tr><td>One-Click Repair</td><td class="highlight">FFmpeg + SoX + Pedalboard</td><td>Mastering only</td><td>Stem separation</td><td>Module-by-module</td></tr>
+      <tr><td>Reference Match</td><td class="highlight">Yes</td><td>No</td><td>No</td><td>EQ match</td></tr>
+      <tr><td>A/B Testing</td><td class="highlight">Built-in</td><td>No</td><td>No</td><td>No</td></tr>
+      <tr><td>Backend Choice</td><td class="highlight">Auto / FFmpeg / SoX / Pedalboard / Hybrid</td><td>Cloud only</td><td>Cloud only</td><td>Local only</td></tr>
+      <tr><td>Batch Processing</td><td class="highlight">Yes</td><td>No</td><td>No</td><td>Yes</td></tr>
+      <tr><td>HTML Reports</td><td class="highlight">Yes</td><td>Basic</td><td>No</td><td>No</td></tr>
+      <tr><td>Price</td><td class="highlight" style="color:var(--nd-emerald)">Free + $49 Pro</td><td>$15/mo</td><td>$9.99/mo</td><td>$1,199</td></tr>
+    </table>
+  </div>
+</section>
 
-      <div class="bento mb-32">
-        <!-- Score Ring -->
-        <div class="bento-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px">
-          <div class="score-ring-container">
-            <svg class="score-ring-svg" viewBox="0 0 180 180">
-              <circle class="score-ring-bg" cx="90" cy="90" r="80"/>
-              <circle class="score-ring-progress" id="scoreArc" cx="90" cy="90" r="80" stroke-dashoffset="150"/>
-            </svg>
-            <div class="score-ring-center">
-              <div class="score-ring-number" id="scoreNumber">87</div>
-              <div class="score-ring-label">Mix Score</div>
-            </div>
-          </div>
-          <div class="badge badge-cyan" style="margin-top:16px">Very Good</div>
-          <div style="margin-top:12px;font-size:11px;color:var(--theme-muted);font-family:var(--nd-font-mono)">Last analyzed: just now</div>
-        </div>
+<!-- Guides -->
+<section>
+  <h2 class="section-title" data-anim="fade-up">Learn <span>Audio Quality</span></h2>
+  <p class="section-sub" data-anim="fade-up">Free guides written for beginners and professionals. No jargon, just practical knowledge you can use immediately.</p>
+  <div class="guide-grid">
+    <a href="guides/what-is-lufs.html" class="guide-card" data-anim="fade-up">
+      <span class="guide-tag beginner">Beginner</span>
+      <h3>What is LUFS? Complete Guide</h3>
+      <p>Learn what LUFS means, how streaming platforms use it, and how to measure your mix loudness correctly — no math degree required.</p>
+    </a>
+    <a href="guides/audio-quality-checklist.html" class="guide-card" data-anim="fade-up">
+      <span class="guide-tag beginner">Beginner</span>
+      <h3>Audio Quality Checklist</h3>
+      <p>10 things to check before releasing your next track. From clipping to stereo width, make sure your mix is ready for streaming.</p>
+    </a>
+    <a href="guides/how-to-clean-noisy-audio.html" class="guide-card" data-anim="fade-up">
+      <span class="guide-tag advanced">Advanced</span>
+      <h3>How to Clean Noisy Audio</h3>
+      <p>Remove hiss, hum, background noise, and room tone using CoProducer's multi-backend repair engine. Step-by-step with real examples.</p>
+    </a>
+  </div>
+</section>
 
-        <!-- Metrics Grid -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="metric-card"><div class="metric-label">LUFS</div><div class="metric-value">-14.2</div><div class="metric-unit">Integrated</div></div>
-          <div class="metric-card"><div class="metric-label">True Peak</div><div class="metric-value">-1.2</div><div class="metric-unit">dBTP</div></div>
-          <div class="metric-card"><div class="metric-label">Dynamic Range</div><div class="metric-value">11.3</div><div class="metric-unit">LU</div></div>
-          <div class="metric-card"><div class="metric-label">Phase</div><div class="metric-value">0.84</div><div class="metric-unit">Correlation</div></div>
-        </div>
+<!-- Pricing -->
+<section id="pricing">
+  <h2 class="section-title" data-anim="fade-up">Simple <span>Pricing</span></h2>
+  <p class="section-sub" data-anim="fade-up">Start free. Upgrade when you need unlimited analysis and batch processing.</p>
+  <div class="pricing-grid">
+    <div class="price-card" data-anim="fade-up">
+      <div class="price-name">Starter</div>
+      <div class="price-amount">$0</div>
+      <div class="price-period">free forever</div>
+      <ul class="price-features">
+        <li>Single track analysis</li>
+        <li>Basic metrics</li>
+        <li>HTML reports</li>
+        <li>Community support</li>
+      </ul>
+      <a href="#download" class="btn btn-secondary" style="width:100%">Download Free</a>
+    </div>
+    <div class="price-card featured" data-anim="fade-up">
+      <div class="price-name">Pro</div>
+      <div class="price-amount">$49</div>
+      <div class="price-period">per month</div>
+      <ul class="price-features">
+        <li>Unlimited analysis</li>
+        <li>Reference matching</li>
+        <li>Batch processing</li>
+        <li>One-click FFmpeg repairs</li>
+        <li>A/B testing</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="#" class="btn btn-primary" style="width:100%" onclick="alert('Stripe checkout coming soon. Launching free tier now.')">Start Free Trial</a>
+    </div>
+    <div class="price-card" data-anim="fade-up">
+      <div class="price-name">Studio</div>
+      <div class="price-amount">$149</div>
+      <div class="price-period">per month</div>
+      <ul class="price-features">
+        <li>Everything in Pro</li>
+        <li>Album consistency</li>
+        <li>Streaming previews</li>
+        <li>Team collaboration</li>
+        <li>API access</li>
+        <li>Dedicated support</li>
+      </ul>
+      <a href="#" class="btn btn-secondary" style="width:100%" onclick="alert('Contact sales for Studio plan.')">Contact Sales</a>
+    </div>
+  </div>
+</section>
+
+<!-- Blog Preview -->
+<section>
+  <h2 class="section-title" data-anim="fade-up">Latest <span>Articles</span></h2>
+  <p class="section-sub" data-anim="fade-up">Tips, tutorials, and deep dives into audio quality, AI mastering, and production workflows.</p>
+  <div class="blog-grid">
+    <a href="blog/ai-audio-analysis-vs-human-engineers.html" class="blog-card" data-anim="fade-up">
+      <div class="blog-card-img">&#9835;</div>
+      <div class="blog-card-body">
+        <div class="blog-card-date">June 29, 2026</div>
+        <h3>AI Audio Analysis vs. Human Engineers</h3>
+        <p>Can AI really measure audio quality? We compare CoProducer's scoring against professional mastering engineers.</p>
       </div>
-
-      <!-- Waveform + Spectrum -->
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px" class="mb-32">
-        <div class="panel panel-scan">
-          <div class="panel-title"><span class="led"></span>Waveform</div>
-          <div class="waveform-visual" style="height:80px">
-            <div class="waveform-bars" id="waveformBars"></div>
-          </div>
-        </div>
-        <div class="panel panel-scan">
-          <div class="panel-title"><span class="led success"></span>Status</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="display:flex;justify-content:space-between;font-family:var(--nd-font-mono);font-size:11px">
-              <span style="color:var(--theme-muted)">Sample Rate</span><span>44.1 kHz</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-family:var(--nd-font-mono);font-size:11px">
-              <span style="color:var(--theme-muted)">Bit Depth</span><span>24-bit</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-family:var(--nd-font-mono);font-size:11px">
-              <span style="color:var(--theme-muted)">Channels</span><span>Stereo</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-family:var(--nd-font-mono);font-size:11px">
-              <span style="color:var(--theme-muted)">Format</span><span>WAV</span>
-            </div>
-          </div>
-        </div>
+    </a>
+    <a href="blog/how-to-use-reference-tracks.html" class="blog-card" data-anim="fade-up">
+      <div class="blog-card-img">&#8646;</div>
+      <div class="blog-card-body">
+        <div class="blog-card-date">June 28, 2026</div>
+        <h3>How to Use Reference Tracks in Your Mix</h3>
+        <p>Step-by-step guide to reference matching: pick the right track, compare metrics, and apply corrections.</p>
       </div>
-
-      <!-- Bottom Metrics Bar -->
-      <div class="panel panel-scan" style="display:flex;align-items:center;padding:12px 20px">
-        <div style="display:flex;gap:0;flex:1;justify-content:space-around">
-          <div style="text-align:center"><div class="badge badge-emerald" style="font-size:9px;margin-bottom:4px">PASS</div><div style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted)">Spotify</div></div>
-          <div style="text-align:center"><div class="badge badge-emerald" style="font-size:9px;margin-bottom:4px">PASS</div><div style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted)">Apple Music</div></div>
-          <div style="text-align:center"><div class="badge badge-emerald" style="font-size:9px;margin-bottom:4px">PASS</div><div style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted)">YouTube</div></div>
-          <div style="text-align:center"><div class="badge badge-emerald" style="font-size:9px;margin-bottom:4px">PASS</div><div style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted)">TIDAL</div></div>
-          <div style="text-align:center"><div class="badge badge-orange" style="font-size:9px;margin-bottom:4px">ADJUST</div><div style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted)">Amazon</div></div>
-        </div>
+    </a>
+    <a href="blog/what-is-stereo-phase.html" class="blog-card" data-anim="fade-up">
+      <div class="blog-card-img">&#9784;</div>
+      <div class="blog-card-body">
+        <div class="blog-card-date">June 27, 2026</div>
+        <h3>What is Stereo Phase? (And Why It Matters)</h3>
+        <p>Mono compatibility, phase cancellation, and how CoProducer detects stereo issues before they ruin your mix.</p>
       </div>
-    </section>
+    </a>
+  </div>
+</section>
 
-    <!-- ============================================================
-         COMPONENTS
-         ============================================================ -->
-    <section id="components" class="mb-48">
-      <h2 class="section-title">Components</h2>
-      <p class="section-sub">Reusable Cyber-HUD UI components styled with NoDAW design tokens.</p>
+<!-- CTA -->
+<section class="cta-section" id="download">
+  <div class="cta-ambient"></div>
+  <h2 class="section-title" data-anim="fade-up">Ready to <span>Perfect Your Sound?</span></h2>
+  <p class="section-sub" data-anim="fade-up" style="text-align:center">Download CoProducer free. No credit card required. Windows + macOS.</p>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap" data-anim="fade-up">
+    <a href="https://github.com/myaiplug/coproducer/releases" class="btn btn-primary btn-lg">Download for Windows</a>
+    <a href="https://github.com/myaiplug/coproducer" class="btn btn-secondary btn-lg">View on GitHub</a>
+  </div>
+  <p style="margin-top:20px;font-size:11px;color:var(--theme-muted);font-family:var(--nd-font-mono)">macOS version coming soon. Free tier includes full analyzer.</p>
+</section>
 
-      <!-- Buttons -->
-      <div class="panel mb-24">
-        <div class="panel-title"><span class="led"></span>Buttons</div>
-        <div class="btn-group">
-          <button class="btn btn-primary">Primary</button>
-          <button class="btn btn-secondary">Secondary</button>
-          <button class="btn btn-danger">Danger</button>
-          <button class="btn btn-primary btn-sm">Small</button>
-          <button class="btn btn-primary btn-lg">Large</button>
-        </div>
-      </div>
-
-      <!-- Toggles + Sliders -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" class="mb-24">
-        <div class="panel">
-          <div class="panel-title"><span class="led"></span>Toggles</div>
-          <div style="display:flex;flex-direction:column;gap:12px">
-            <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span>Master Bypass</label>
-            <label class="toggle"><input type="checkbox"><span class="toggle-track"></span>Auto Gain</label>
-            <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span>True Peak Limiter</label>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="panel-title"><span class="led"></span>Sliders</div>
-          <div style="display:flex;flex-direction:column;gap:16px">
-            <div class="slider-group">
-              <div class="slider-header"><span>Threshold</span><span>-14.2 dB</span></div>
-              <input type="range" min="-30" max="0" value="-14">
-            </div>
-            <div class="slider-group">
-              <div class="slider-header"><span>Ratio</span><span>4:1</span></div>
-              <input type="range" min="1" max="20" value="4">
-            </div>
-            <div class="slider-group">
-              <div class="slider-header"><span>Attack</span><span>10 ms</span></div>
-              <input type="range" min="0.1" max="50" value="10">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Inputs + Badges -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div class="panel">
-          <div class="panel-title"><span class="led"></span>Inputs</div>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <input class="nd-input" type="text" placeholder="Search tracks...">
-            <input class="nd-input" type="text" placeholder="Enter threshold value" value="-14.2">
-            <select class="nd-input" style="cursor:pointer">
-              <option>Select Analysis Mode</option>
-              <option>Single Track</option>
-              <option>Reference Match</option>
-              <option>Batch Analysis</option>
-            </select>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="panel-title"><span class="led success"></span>Upload Zone</div>
-          <div class="upload-zone" style="padding:24px">
-            <div class="upload-icon" style="font-size:24px">+</div>
-            <div class="upload-title" style="font-size:14px">Drop audio here</div>
-            <div class="upload-sub">or click to browse</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         A/B TESTING LAB
-         ============================================================ -->
-    <section id="abtest" class="mb-48">
-      <h2 class="section-title">A/B Testing Lab</h2>
-      <p class="section-sub">Compare two audio files side by side with synchronized waveform overlay.</p>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" class="mb-16">
-        <div class="panel">
-          <div class="panel-title"><span class="led"></span>Track A (Original)</div>
-          <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex">
-            Load A
-            <input type="file" id="abFileA" accept="audio/*" style="display:none">
-          </label>
-          <span id="abNameA" style="font-size:11px;color:var(--theme-muted);font-family:var(--nd-font-mono);margin-left:8px">No file</span>
-          <canvas id="abWaveA" class="viz-canvas" height="60" style="margin-top:8px"></canvas>
-        </div>
-        <div class="panel">
-          <div class="panel-title"><span class="led warning"></span>Track B (Processed)</div>
-          <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex">
-            Load B
-            <input type="file" id="abFileB" accept="audio/*" style="display:none">
-          </label>
-          <span id="abNameB" style="font-size:11px;color:var(--theme-muted);font-family:var(--nd-font-mono);margin-left:8px">No file</span>
-          <canvas id="abWaveB" class="viz-canvas" height="60" style="margin-top:8px"></canvas>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-primary btn-sm" id="abPlayBtn" onclick="abTogglePlay()">Play A</button>
-          <button class="btn btn-secondary btn-sm" onclick="abStop()">Stop</button>
-          <div style="display:flex;gap:4px;font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted)">
-            <label class="toggle"><input type="radio" name="abSelect" value="a" checked onchange="abSelectTrack('a')"><span class="toggle-track"></span>A</label>
-            <label class="toggle"><input type="radio" name="abSelect" value="b" onchange="abSelectTrack('b')"><span class="toggle-track"></span>B</label>
-          </div>
-          <span id="abStatus" style="font-family:var(--nd-font-mono);font-size:11px;color:var(--theme-muted)">Ready</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         METADATA LAB
-         ============================================================ -->
-    <section id="metadata" class="mb-48">
-      <h2 class="section-title">Metadata Lab</h2>
-      <p class="section-sub">Inspect and edit audio file metadata, technical specifications, and analysis tags.</p>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div class="panel">
-          <div class="panel-title"><span class="led success"></span>File Info</div>
-          <label class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;margin-bottom:12px">
-            Load File
-            <input type="file" id="metaFileInput" accept="audio/*" style="display:none">
-          </label>
-          <div id="metaInfo" style="display:flex;flex-direction:column;gap:6px">
-            <div style="font-family:var(--nd-font-mono);font-size:11px;color:var(--theme-muted)">No file loaded</div>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="panel-title"><span class="led"></span>Tags</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div><label style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);display:block;margin-bottom:2px">Title</label><input class="nd-input" id="metaTitle" placeholder="Track title"></div>
-            <div><label style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);display:block;margin-bottom:2px">Artist</label><input class="nd-input" id="metaArtist" placeholder="Artist name"></div>
-            <div><label style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);display:block;margin-bottom:2px">Album</label><input class="nd-input" id="metaAlbum" placeholder="Album name"></div>
-            <div><label style="font-family:var(--nd-font-mono);font-size:10px;color:var(--theme-muted);display:block;margin-bottom:2px">Genre</label><input class="nd-input" id="metaGenre" placeholder="Genre"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         LANDING PAGE HERO (preview)
-         ============================================================ -->
-
-    <!-- ============================================================
-         LANDING PAGE HERO
-         ============================================================ -->
-    <section id="landing" class="mb-48">
-      <h2 class="section-title">Landing Page</h2>
-      <p class="section-sub">Conversion-focused hero section with interactive waveform + CTA.</p>
-
-      <div class="panel" style="padding:60px 48px;text-align:center;position:relative;overflow:hidden">
-        <!-- Ambient glow -->
-        <div style="position:absolute;top:-50%;left:50%;transform:translateX(-50%);width:400px;height:400px;background:radial-gradient(circle,var(--theme-glow) 0%,transparent 70%);pointer-events:none"></div>
-
-        <div style="position:relative;z-index:1">
-          <div style="font-family:var(--nd-font-display);font-size:12px;font-weight:400;color:var(--theme-accent,var(--nd-cyan));letter-spacing:4px;margin-bottom:16px">AI-POWERED MASTERING</div>
-          <h1 style="font-family:var(--nd-font-display);font-size:52px;font-weight:700;letter-spacing:2px;line-height:1.1;margin-bottom:16px">
-            Your Mix.<br>
-            <span style="background:var(--theme-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Reviewed.</span>
-          </h1>
-          <p style="font-size:16px;color:var(--theme-muted);max-width:500px;margin:0 auto 32px">
-            Professional audio analysis, one-click repairs, and reference matching — powered by the NoDAW engine.
-          </p>
-
-          <!-- Waveform decoration -->
-          <div style="max-width:500px;margin:0 auto 32px">
-            <div class="waveform-visual" style="height:40px;opacity:0.4">
-              <div class="waveform-bars" id="landingWaveform"></div>
-            </div>
-          </div>
-
-          <div style="display:flex;gap:12px;justify-content:center">
-            <button class="btn btn-primary btn-lg">Start Analyzing</button>
-            <button class="btn btn-secondary btn-lg">View Demo</button>
-          </div>
-
-          <div style="margin-top:24px;display:flex;gap:24px;justify-content:center;font-family:var(--nd-font-mono);font-size:11px;color:var(--theme-muted)">
-            <span>> No credit card required</span>
-            <span>> Free 14-day trial</span>
-            <span>> Windows + macOS</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         AUDIO LAB (Tone.js Real-Time Visualizations)
-         ============================================================ -->
-    <section id="audiolab" class="mb-48">
-      <h2 class="section-title">Audio Lab</h2>
-      <p class="section-sub">Real-time waveform, frequency balance, phase correlation, and spectrogram powered by Tone.js.</p>
-
-      <!-- Controls -->
-      <div class="panel mb-24">
-        <div class="panel-title"><span class="led animate-pulse-glow"></span>Audio Engine</div>
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-          <label class="btn btn-secondary" style="cursor:pointer">
-            Load Audio
-            <input type="file" id="audioFileInput" accept="audio/*" style="display:none">
-          </label>
-          <button class="btn btn-primary btn-sm" id="playBtn" onclick="togglePlay()">Play</button>
-          <button class="btn btn-danger btn-sm" onclick="stopAudio()">Stop</button>
-          <span id="audioStatus" style="font-family:var(--nd-font-mono);font-size:11px;color:var(--theme-muted)">No file loaded</span>
-          <input type="range" id="volumeSlider" min="-40" max="0" value="-6" style="width:100px;margin-left:auto">
-        </div>
-      </div>
-
-      <!-- Waveform -->
-      <div class="panel mb-24">
-        <div class="panel-title"><span class="led"></span>Waveform</div>
-        <canvas id="waveformCanvas" class="viz-canvas" height="120"></canvas>
-      </div>
-
-      <!-- Three-column visualizations -->
-      <div class="viz-grid mb-24">
-        <!-- Frequency Balance -->
-        <div class="panel">
-          <div class="panel-title"><span class="led success"></span>Frequency Balance</div>
-          <div id="freqBands" style="display:flex;flex-direction:column;gap:2px"></div>
-        </div>
-
-        <!-- Phase Correlation -->
-        <div class="panel" style="position:relative">
-          <div class="panel-title"><span class="led"></span>Phase Correlation</div>
-          <canvas id="phaseCanvas" class="viz-canvas" height="200"></canvas>
-          <div style="display:flex;justify-content:space-between;font-family:var(--nd-font-mono);font-size:9px;color:var(--theme-muted);margin-top:4px">
-            <span>Out of Phase</span>
-            <span id="phaseValue">0.00</span>
-            <span>In Phase</span>
-          </div>
-        </div>
-
-        <!-- Spectrogram -->
-        <div class="panel">
-          <div class="panel-title"><span class="led warning"></span>Spectrogram</div>
-          <canvas id="spectrogramCanvas" class="viz-canvas" height="200"></canvas>
-        </div>
-      </div>
-    </section>
-
-  </main>
-</div>
+<!-- Footer -->
+<footer>
+  <div class="footer-links">
+    <a href="guides/">Guides</a>
+    <a href="comparisons/">Comparisons</a>
+    <a href="blog/">Blog</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="https://github.com/myaiplug/coproducer">GitHub</a>
+    <a href="https://twitter.com/nodaw_audio">Twitter / X</a>
+  </div>
+  <p>&copy; 2026 NoDAW Labs. CoProducer is the AI Production Assistant.</p>
+  <p style="margin-top:8px;font-size:10px">Analyze. Improve. Deliver.</p>
+</footer>
 
 <script>
-// ============================================================
-// Waveform Generator
-// ============================================================
-function generateWaveform(containerId, barCount) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = '';
-  for (let i = 0; i < barCount; i++) {
-    const bar = document.createElement('div');
-    bar.className = 'waveform-bar';
-    const height = 20 + Math.random() * 60;
-    bar.style.height = height + '%';
-    container.appendChild(bar);
-  }
-}
+// GSAP Animations
+gsap.registerPlugin(ScrollTrigger);
 
-generateWaveform('waveformBars', 80);
-generateWaveform('landingWaveform', 60);
-
-// Animate waveform bars
-setInterval(() => {
-  document.querySelectorAll('.waveform-bars').forEach(container => {
-    container.querySelectorAll('.waveform-bar').forEach(bar => {
-      bar.style.height = (15 + Math.random() * 65) + '%';
-    });
+// Fade-up elements
+document.querySelectorAll('[data-anim="fade-up"]').forEach(el => {
+  gsap.from(el, {
+    y: 40, opacity: 0, duration: 0.8, ease: 'power3.out',
+    scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
   });
-}, 200);
-
-// ============================================================
-// Settings Dropdown
-// ============================================================
-function toggleSettings() {
-  document.getElementById('settingsDropdown').classList.toggle('open');
-}
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.settings-trigger') && !e.target.closest('.settings-dropdown')) {
-    document.getElementById('settingsDropdown')?.classList.remove('open');
-  }
 });
 
-function setTheme(name) {
-  document.documentElement.setAttribute('data-theme', name);
-  localStorage.setItem('nodaw-theme', name);
-  document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === name));
-}
-
-// Restore saved theme
-const savedTheme = localStorage.getItem('nodaw-theme');
-if (savedTheme) setTheme(savedTheme);
-
-// ============================================================
-// A/B Testing
-// ============================================================
-const abState = { playerA: null, playerB: null, active: 'a', ctx: null, isPlaying: false };
-
-document.getElementById('abFileA')?.addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  document.getElementById('abNameA').textContent = file.name;
-  const buf = await file.arrayBuffer();
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  if (ctx.state === 'suspended') await ctx.resume();
-  abState.ctx = ctx;
-  const decoded = await ctx.decodeAudioData(buf);
-  drawWaveform(decoded, 'abWaveA');
-  abState.playerA = decoded;
-});
-
-document.getElementById('abFileB')?.addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  document.getElementById('abNameB').textContent = file.name;
-  const buf = await file.arrayBuffer();
-  const ctx = abState.ctx || new (window.AudioContext || window.webkitAudioContext)();
-  if (ctx.state === 'suspended') await ctx.resume();
-  abState.ctx = ctx;
-  const decoded = await ctx.decodeAudioData(buf);
-  drawWaveform(decoded, 'abWaveB');
-  abState.playerB = decoded;
-});
-
-function drawWaveform(buffer, canvasId) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width = canvas.clientWidth;
-  const h = canvas.height;
-  const data = buffer.getChannelData(0);
-  const step = Math.max(1, Math.floor(data.length / w));
-
-  ctx.clearRect(0, 0, w, h);
-  ctx.beginPath();
-  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--nd-cyan').trim() || '#22d3ee';
-  ctx.lineWidth = 1.5;
-  ctx.moveTo(0, h/2);
-  for (let i = 0; i < w; i++) {
-    const idx = i * step;
-    let max = 0;
-    for (let j = 0; j < step && idx + j < data.length; j++) {
-      const abs = Math.abs(data[idx + j]);
-      if (abs > max) max = abs;
-    }
-    ctx.lineTo(i, h/2 - max * (h/2 - 2));
-  }
-  ctx.stroke();
-
-  // Mirror bottom
-  ctx.beginPath();
-  ctx.strokeStyle = 'rgba(34,211,238,0.15)';
-  ctx.moveTo(0, h/2);
-  for (let i = 0; i < w; i++) {
-    const idx = i * step;
-    let max = 0;
-    for (let j = 0; j < step && idx + j < data.length; j++) {
-      const abs = Math.abs(data[idx + j]);
-      if (abs > max) max = abs;
-    }
-    ctx.lineTo(i, h/2 + max * (h/2 - 2));
-  }
-  ctx.stroke();
-}
-
-function abSelectTrack(track) {
-  abState.active = track;
-  abStop();
-  document.getElementById('abStatus').textContent = `Selected: Track ${track.toUpperCase()}`;
-}
-
-function abTogglePlay() {
-  const buf = abState.active === 'a' ? abState.playerA : abState.playerB;
-  if (!buf) { document.getElementById('abStatus').textContent = 'Load track first'; return; }
-  const btn = document.getElementById('abPlayBtn');
-
-  if (abState.isPlaying) {
-    if (abState.source) { abState.source.stop(); abState.source.disconnect(); }
-    abState.isPlaying = false;
-    btn.textContent = `Play ${abState.active.toUpperCase()}`;
-    document.getElementById('abStatus').textContent = 'Stopped';
-    return;
-  }
-
-  Tone.start().then(() => {
-    if (abState.source) { abState.source.disconnect(); }
-    const ac = Tone.context.rawContext;
-    abState.source = ac.createBufferSource();
-    abState.source.buffer = buf;
-    abState.source.connect(ac.destination);
-    abState.source.start(0);
-    abState.isPlaying = true;
-    btn.textContent = 'Stop';
-    const name = abState.active === 'a' ? document.getElementById('abNameA').textContent : document.getElementById('abNameB').textContent;
-    document.getElementById('abStatus').textContent = `Playing: ${name}`;
-  });
-}
-
-function abStop() {
-  if (abState.source) { abState.source.stop(); abState.source.disconnect(); abState.source = null; }
-  abState.isPlaying = false;
-  document.getElementById('abPlayBtn').textContent = `Play ${abState.active.toUpperCase()}`;
-}
-
-// ============================================================
-// Metadata Lab
-// ============================================================
-document.getElementById('metaFileInput')?.addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const container = document.getElementById('metaInfo');
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const buf = await file.arrayBuffer();
-  const decoded = await ctx.decodeAudioData(buf);
-
-  const info = [
-    { label: 'File Name', value: file.name },
-    { label: 'File Size', value: (file.size / 1024).toFixed(1) + ' KB' },
-    { label: 'Duration', value: decoded.duration.toFixed(2) + ' s' },
-    { label: 'Sample Rate', value: decoded.sampleRate + ' Hz' },
-    { label: 'Channels', value: decoded.numberOfChannels },
-    { label: 'Bit Depth', value: '32-bit (float)' },
-    { label: 'Format', value: file.type || 'Unknown' },
-  ];
-
-  container.innerHTML = info.map(i =>
-    `<div style="display:flex;justify-content:space-between;font-family:var(--nd-font-mono);font-size:11px;padding:3px 0;border-bottom:1px solid var(--nd-border)">
-      <span style="color:var(--theme-muted)">${i.label}</span>
-      <span style="color:var(--theme-text)">${i.value}</span>
-    </div>`
-  ).join('');
-
-  // Fill tags from filename heuristic
-  const stem = file.name.replace(/\.[^.]+$/, '');
-  document.getElementById('metaTitle').value = stem;
-  document.getElementById('metaGenre').value = decoded.numberOfChannels > 1 ? 'Stereo' : 'Mono';
-});
-
-// ============================================================
-// Score Ring Animation
-// ============================================================
-function animateScore(targetScore) {
+// Score ring animation
+function animateScore(target) {
   const arc = document.getElementById('scoreArc');
-  const num = document.getElementById('scoreNumber');
-  const circumference = 502;
+  const num = document.getElementById('scoreNum');
+  const circ = 565;
   let current = 0;
-  const step = Math.max(1, Math.floor(targetScore / 30));
-
+  const step = Math.max(1, Math.floor(target / 40));
   function tick() {
-    current = Math.min(current + step, targetScore);
-    const offset = circumference - (current / 100) * circumference;
-    arc.style.strokeDashoffset = offset;
+    current = Math.min(current + step, target);
+    arc.style.strokeDashoffset = circ - (current / 100) * circ;
     num.textContent = current;
-    if (current < targetScore) requestAnimationFrame(tick);
+    if (current < target) requestAnimationFrame(tick);
   }
   tick();
 }
 
-// Set initial ring state
-const initialOffset = 502 - (87 / 100) * 502;
-document.getElementById('scoreArc').style.strokeDashoffset = initialOffset;
-animateScore(87);
-
-// ============================================================
-// Scroll to sections
-// ============================================================
-function scrollToSection(id) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  event?.target?.classList?.add('active');
-}
-
-// ============================================================
-// Slider value display
-// ============================================================
-document.querySelectorAll('input[type="range"]').forEach(slider => {
-  slider.addEventListener('input', () => {
-    const header = slider.closest('.slider-group')?.querySelector('.slider-header span:last-child');
-    if (header) {
-      const val = parseFloat(slider.value);
-      const unit = slider.getAttribute('min') === '0.1' ? ' ms' : slider.getAttribute('max') === '20' ? ':1' : ' dB';
-      header.textContent = val + unit;
-    }
-  });
-});
-
-// ============================================================
-// Tone.js Audio Lab
-// ============================================================
-const audioState = { player: null, isPlaying: false, source: null, buffer: null };
-
-// Analyser nodes
-let waveformAnalyser, fftAnalyser, meterAnalyser;
-
-// Canvas refs
-const waveformCanvas = document.getElementById('waveformCanvas');
-const waveformCtx = waveformCanvas?.getContext('2d');
-const phaseCanvas = document.getElementById('phaseCanvas');
-const phaseCtx = phaseCanvas?.getContext('2d');
-const spectrogramCanvas = document.getElementById('spectrogramCanvas');
-const spectrogramCtx = spectrogramCanvas?.getContext('2d');
-
-// Frequency bands config
-const FREQ_BANDS = [
-  { label: 'Sub', min: 20, max: 60, id: 'sub' },
-  { label: 'Bass', min: 60, max: 150, id: 'bass' },
-  { label: 'Low Mid', min: 150, max: 400, id: 'lowmid' },
-  { label: 'Mid', min: 400, max: 1200, id: 'mid' },
-  { label: 'Presence', min: 1200, max: 4000, id: 'pres' },
-  { label: 'High', min: 4000, max: 10000, id: 'high' },
-  { label: 'Air', min: 10000, max: 18000, id: 'air' },
-];
-
-// Spectrogram buffer (columns of FFT data)
-const SPECTROGRAM_WIDTH = 256;
-const SPECTROGRAM_HEIGHT = 128;
-let spectrogramBuffer = [];
-
-// Build frequency band UI
-const freqContainer = document.getElementById('freqBands');
-if (freqContainer) {
-  FREQ_BANDS.forEach((band, i) => {
-    const row = document.createElement('div');
-    row.className = 'freq-band-row';
-    row.innerHTML = `
-      <span class="freq-band-label">${band.label}</span>
-      <div style="flex:1;background:var(--nd-bg-deep);border-radius:2px;height:8px;position:relative">
-        <div class="freq-band-bar" id="freqBar${i}" style="width:5%"></div>
-      </div>
-      <span class="freq-band-value" id="freqVal${i}">-inf</span>
-    `;
-    freqContainer.appendChild(row);
-  });
-}
-
-// File upload handler
-document.getElementById('audioFileInput')?.addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  document.getElementById('audioStatus').textContent = `Loading ${file.name}...`;
-
-  try {
-    // Stop any previous playback
-    stopAudio();
-
-    // Decode with Web Audio API first
-    const arrayBuffer = await file.arrayBuffer();
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    // Resume context if suspended
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-
-    const decoded = await audioCtx.decodeAudioData(arrayBuffer);
-    audioState.buffer = decoded;
-
-    // Create Tone.js player from the buffer
-    if (audioState.player) { audioState.player.dispose(); }
-
-    // Create a Tone AudioBuffer from decoded data
-    const len = decoded.length;
-    const numChan = decoded.numberOfChannels;
-    const channels = [];
-    for (let c = 0; c < numChan; c++) {
-      channels.push(decoded.getChannelData(c));
-    }
-    const toneBuffer = new Tone.ToneArrayBuffer(channels[0], decoded.sampleRate);
-    // Actually use Tone's built-in buffer mechanism
-    // We'll create a custom approach using raw PCM
-
-    // Simpler approach: use URL.createObjectURL with Tone.Player
-    const blobUrl = URL.createObjectURL(file);
-    audioState.player = new Tone.Player({
-      url: blobUrl,
-      autostart: false,
-      loop: false,
-      onload: () => {
-        document.getElementById('audioStatus').textContent = `Ready: ${file.name}`;
-      },
-      onerror: (err) => {
-        document.getElementById('audioStatus').textContent = `Error: ${err}`;
-      }
-    }).toDestination();
-
-    // Wait for load
-    await new Promise((resolve, reject) => {
-      if (audioState.player.loaded) resolve();
-      else {
-        audioState.player.onload = resolve;
-        audioState.player.onerror = reject;
-      }
-    });
-
-    // Set up analysers
-    waveformAnalyser = new Tone.Waveform(1024);
-    fftAnalyser = new Tone.FFT({ size: 1024 });
-    meterAnalyser = new Tone.Meter();
-
-    audioState.player.connect(waveformAnalyser);
-    audioState.player.connect(fftAnalyser);
-    audioState.player.connect(meterAnalyser);
-
-    // Set initial volume
-    const vol = new Tone.Volume(parseFloat(document.getElementById('volumeSlider').value));
-    audioState.player.chain(waveformAnalyser, fftAnalyser, meterAnalyser, vol, Tone.Destination);
-
-    document.getElementById('audioStatus').textContent = `Ready: ${file.name}`;
-    audioState.isLoaded = true;
-
-    // Start visualization loop
-    if (!audioState.animId) renderLoop();
-
-  } catch (err) {
-    console.error('Audio load error:', err);
-    document.getElementById('audioStatus').textContent = `Error: ${err.message}`;
-  }
-});
-
-// Volume slider
-document.getElementById('volumeSlider')?.addEventListener('input', (e) => {
-  // Will be applied when player is created
-});
-
-function togglePlay() {
-  if (!audioState.player) return;
-  if (audioState.isPlaying) {
-    audioState.player.stop();
-    audioState.isPlaying = false;
-    document.getElementById('playBtn').textContent = 'Play';
-  } else {
-    Tone.start().then(() => {
-      audioState.player.start(0);
-      audioState.isPlaying = true;
-      document.getElementById('playBtn').textContent = 'Pause';
-      document.getElementById('audioStatus').textContent = 'Playing';
-    });
+// Wait for GSAP to register then animate
+setTimeout(() => animateScore(87), 500);
+</script>
+<!-- Schema.org markup -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "CoProducer",
+  "applicationCategory": "Multimedia",
+  "operatingSystem": "Windows, macOS",
+  "description": "AI-powered audio quality analyzer and repair engine. Analyze LUFS, true peak, dynamic range, stereo width, phase. One-click FFmpeg/Pedalboard/SoX repair.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "NoDAW Labs"
   }
 }
-
-function stopAudio() {
-  if (audioState.player) {
-    audioState.player.stop();
-    audioState.player.dispose();
-    audioState.player = null;
-  }
-  audioState.isPlaying = false;
-  document.getElementById('playBtn').textContent = 'Play';
-  document.getElementById('audioStatus').textContent = 'Stopped';
+</script>
+<!-- FAQ Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What is CoProducer?","acceptedAnswer":{"@type":"Answer","text":"CoProducer is an AI-powered audio quality analyzer and repair engine for musicians, producers, and audio engineers."}},
+    {"@type":"Question","name":"Is CoProducer free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The Starter tier is free forever with single-track analysis, basic metrics, and HTML reports."}},
+    {"@type":"Question","name":"What platforms does CoProducer support?","acceptedAnswer":{"@type":"Answer","text":"CoProducer runs on Windows and macOS. Linux support is available through the Python package."}},
+    {"@type":"Question","name":"Does CoProducer require an internet connection?","acceptedAnswer":{"@type":"Answer","text":"No. All analysis and repair runs locally on your machine. Your audio never leaves your computer."}}
+  ]
 }
-
-// ============================================================
-// Visualization Render Loop
-// ============================================================
-function renderLoop() {
-  audioState.animId = requestAnimationFrame(renderLoop);
-
-  // Only render if we have analysers
-  if (!waveformAnalyser && !fftAnalyser) return;
-
-  try {
-    // --- Waveform ---
-    if (waveformCanvas && waveformCtx) {
-      const waveform = waveformAnalyser ? waveformAnalyser.getValue() : new Float32Array(1024);
-      const w = waveformCanvas.width = waveformCanvas.clientWidth;
-      const h = waveformCanvas.height;
-
-      waveformCtx.clearRect(0, 0, w, h);
-      waveformCtx.beginPath();
-      waveformCtx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--nd-cyan').trim() || '#22d3ee';
-      waveformCtx.lineWidth = 1.5;
-
-      const len = waveform.length;
-      const step = w / len;
-      waveformCtx.moveTo(0, h / 2 + (waveform[0] || 0) * (h / 2 - 4));
-      for (let i = 1; i < len; i++) {
-        const x = i * step;
-        const y = h / 2 + (waveform[i] || 0) * (h / 2 - 4);
-        waveformCtx.lineTo(x, y);
-      }
-      waveformCtx.stroke();
-
-      // Center line
-      waveformCtx.strokeStyle = 'rgba(255,255,255,0.06)';
-      waveformCtx.lineWidth = 1;
-      waveformCtx.beginPath();
-      waveformCtx.moveTo(0, h / 2);
-      waveformCtx.lineTo(w, h / 2);
-      waveformCtx.stroke();
-    }
-
-    // --- FFT Frequency Data ---
-    if (fftAnalyser) {
-      const fftData = fftAnalyser.getValue();
-      const freqBins = fftData.length;
-      const nyquist = Tone.context.sampleRate / 2;
-      const binWidth = nyquist / freqBins;
-
-      // Update frequency band bars
-      FREQ_BANDS.forEach((band, i) => {
-        const startBin = Math.floor(band.min / binWidth);
-        const endBin = Math.min(Math.ceil(band.max / binWidth), freqBins);
-        let sum = 0, count = 0;
-        for (let b = startBin; b < endBin && b < freqBins; b++) {
-          const val = fftData[b];
-          if (isFinite(val)) { sum += val; count++; }
-        }
-        const avg = count > 0 ? sum / count : -100;
-        // Convert from dB (negative) to 0-100%
-        const pct = Math.min(100, Math.max(0, (avg + 100) / 100 * 100));
-        const bar = document.getElementById(`freqBar${i}`);
-        const val = document.getElementById(`freqVal${i}`);
-        if (bar) bar.style.width = pct + '%';
-        if (val) val.textContent = avg.toFixed(1) + ' dB';
-      });
-
-      // --- Spectrogram ---
-      if (spectrogramCanvas && spectrogramCtx) {
-        const sw = spectrogramCanvas.width = spectrogramCanvas.clientWidth;
-        const sh = SPECTROGRAM_HEIGHT;
-
-        // Add current FFT slice to buffer (downsampled)
-        const sliceWidth = 64;
-        const slice = [];
-        const step2 = Math.max(1, Math.floor(freqBins / sliceWidth));
-        for (let i = 0; i < sliceWidth; i++) {
-          let s = 0, c2 = 0;
-          for (let j = 0; j < step2 && i * step2 + j < freqBins; j++) {
-            const v = fftData[i * step2 + j];
-            if (isFinite(v)) { s += v; c2++; }
-          }
-          slice.push(c2 > 0 ? s / c2 : -100);
-        }
-
-        spectrogramBuffer.unshift(slice);
-        if (spectrogramBuffer.length > sh) spectrogramBuffer.pop();
-
-        // Clear spectrogram
-        spectrogramCtx.clearRect(0, 0, sw, sh);
-
-        const colW = sw / sliceWidth;
-        const rowH = sh / Math.max(1, spectrogramBuffer.length);
-
-        for (let row = 0; row < spectrogramBuffer.length; row++) {
-          for (let col = 0; col < sliceWidth; col++) {
-            const val = spectrogramBuffer[row]?.[col] ?? -100;
-            // Map dB (-100 to 0) to color
-            const norm = Math.min(1, Math.max(0, (val + 60) / 60));
-            const r = Math.floor(norm * 255);
-            const g = Math.floor(norm * 200);
-            const b = Math.floor((1 - norm) * 255);
-            spectrogramCtx.fillStyle = `rgb(${r},${g},${b})`;
-            spectrogramCtx.fillRect(col * colW, row * rowH, colW + 0.5, rowH + 0.5);
-          }
-        }
-      }
-    }
-
-    // --- Phase Correlation ---
-    if (phaseCanvas && phaseCtx && audioState.buffer) {
-      const pw = phaseCanvas.width = phaseCanvas.clientWidth;
-      const ph = phaseCanvas.height;
-
-      phaseCtx.clearRect(0, 0, pw, ph);
-
-      // Dark background
-      phaseCtx.fillStyle = 'rgba(2,6,23,0.5)';
-      phaseCtx.fillRect(0, 0, pw, ph);
-
-      // Grid crosshair
-      const cx = pw / 2, cy = ph / 2;
-      phaseCtx.strokeStyle = 'rgba(255,255,255,0.06)';
-      phaseCtx.lineWidth = 1;
-      phaseCtx.beginPath();
-      phaseCtx.moveTo(cx, 0); phaseCtx.lineTo(cx, ph);
-      phaseCtx.moveTo(0, cy); phaseCtx.lineTo(pw, cy);
-      phaseCtx.stroke();
-
-      // Get current samples for L/R
-      const buf = audioState.buffer;
-      const pos = audioState.player ? (audioState.player.now() * buf.sampleRate || 0) : 0;
-      const currentFrame = Math.floor(pos) % buf.length;
-      const windowSize = 512;
-      const halfW = windowSize / 2;
-
-      let sumPhase = 0, countPhase = 0;
-      const scale = Math.min(pw, ph) / 2 * 0.8;
-
-      phaseCtx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--nd-cyan').trim() || '#22d3ee';
-      phaseCtx.shadowColor = getComputedStyle(document.documentElement).getPropertyValue('--nd-cyan').trim() || '#22d3ee';
-      phaseCtx.shadowBlur = 8;
-
-      for (let i = 0; i < windowSize; i++) {
-        const idx = (currentFrame - halfW + i + buf.length) % buf.length;
-        let l = 0, r = 0;
-        if (buf.numberOfChannels >= 2) {
-          l = buf.getChannelData(0)[idx] || 0;
-          r = buf.getChannelData(1)[idx] || 0;
-        } else {
-          l = r = buf.getChannelData(0)[idx] || 0;
-        }
-        const x = cx + r * scale;
-        const y = cy - l * scale;
-        phaseCtx.fillRect(x - 0.5, y - 0.5, 1.5, 1.5);
-
-        // Phase correlation value (sum of L*R)
-        sumPhase += l * r;
-        countPhase++;
-      }
-
-      phaseCtx.shadowBlur = 0;
-
-      // Update phase value display
-      const phaseVal = countPhase > 0 ? (sumPhase / countPhase) : 0;
-      const phaseEl = document.getElementById('phaseValue');
-      if (phaseEl) phaseEl.textContent = phaseVal.toFixed(2);
-    }
-
-  } catch (e) {
-    // Silent fail during render (analyser not ready yet)
-  }
-}
-
-// Resize handlers
-window.addEventListener('resize', () => {
-  if (waveformCanvas) waveformCanvas.width = waveformCanvas.clientWidth;
-  if (phaseCanvas) phaseCanvas.width = phaseCanvas.clientWidth;
-  if (spectrogramCanvas) spectrogramCanvas.width = spectrogramCanvas.clientWidth;
-});
-
 </script>
 </body>
 </html>

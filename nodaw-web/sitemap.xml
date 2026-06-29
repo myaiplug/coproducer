@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://myaiplug.github.io/coproducer/</loc><priority>1.0</priority></url>
+  <url><loc>https://myaiplug.github.io/coproducer/pricing.html</loc><priority>0.9</priority></url>
+  <url><loc>https://myaiplug.github.io/coproducer/blog/</loc><priority>0.8</priority></url>
+  <url><loc>https://myaiplug.github.io/coproducer/guides/</loc><priority>0.8</priority></url>
+  <url><loc>https://myaiplug.github.io/coproducer/comparisons/</loc><priority>0.7</priority></url>
+  <url><loc>https://myaiplug.github.io/coproducer/comparisons/vs-landr.html</loc><priority>0.7</priority></url>
+  <url><loc>https://myaiplug.github.io/coproducer/comparisons/vs-moises.html</loc><priority>0.7</priority></url>
+  <url><loc>https://myaiplug.github.io/coproducer/comparisons/vs-izotope-rx.html</loc><priority>0.7</priority></url>
+  <url><loc>https://myaiplug.github.io/coproducer/guides/what-is-lufs.html</loc><priority>0.6</priority></url>
+  <url><loc>https://myaiplug.github.io/coproducer/guides/audio-quality-checklist.html</loc><priority>0.6</priority></url>
+  <url><loc>https://myaiplug.github.io/coproducer/guides/how-to-clean-noisy-audio.html</loc><priority>0.6</priority></url>
+</urlset>
