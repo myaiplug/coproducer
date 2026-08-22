@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="obsidian-glass">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoDAW — Pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400..700&family=Rajdhani:wght@500;600;700&family=Syncopate:wght@400;700&family=Manrope:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --nd-bg-deep: #020617; -- nd-bg-surface: #0f172a;
+  --nd-bg-panel: rgba(15,23,42,0.92); --nd-bg-glass: rgba(15,23,42,0.68);
+  --nd-border: rgba(51,65,85,0.5); --nd-border-active: rgba(6,182,212,0.38);
+  --nd-cyan: #22d3ee; --nd-cyan-dark: #06b6d4; --nd-emerald: #10b981;
+  --nd-orange: #f97316; --nd-red: #ef4444; --nd-gold: #facc15;
+  --nd-text-primary: #e2e8f0; --nd-text-secondary: #94a3b8;
+  --nd-text-muted: #64748b; --nd-text-dim: #475569;
+  --nd-radius-sm: 4px; --nd-radius-md: 8px; --nd-radius-lg: 12px; --nd-radius-xl: 16px;
+  --nd-font-mono: 'JetBrains Mono', monospace; --nd-font-tech: 'Rajdhani', sans-serif;
+  --nd-font-body: 'Manrope', sans-serif; --nd-font-display: 'Syncopate', sans-serif;
+}
+[data-theme='obsidian-glass'] {
+  --theme-bg: #000; --theme-surface: rgba(8,10,14,0.82);
+  --theme-border: rgba(255,255,255,0.10); --theme-primary: #fff;
+  --theme-secondary: #a1a1aa; --theme-accent: #22d3ee; --theme-accent-2: #10b981;
+  --theme-gold: #c8a24a; --theme-text: #f5f5f5; --theme-muted: rgba(255,255,255,0.48);
+  --theme-glow: rgba(34,211,238,0.10); --theme-gradient: linear-gradient(135deg,#22d3ee,#10b981);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: var(--nd-font-body); background: var(--theme-bg, #020617); color: var(--theme-text, #e2e8f0); min-height:100vh; }
+::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background: var(--nd-border); border-radius:3px; }
+
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--nd-font-mono); font-size:12px; font-weight:700; padding:10px 20px; border-radius:var(--nd-radius-md); cursor:pointer; transition:all 0.2s; border:1px solid transparent; text-transform:uppercase; letter-spacing:0.5px; }
+.btn-primary { background:#164e63; border-color:var(--nd-cyan-dark); color:#ecfeff; box-shadow:0 4px 20px rgba(8,145,178,0.3); }
+.btn-primary:hover { background:#155e75; box-shadow:0 6px 25px rgba(8,145,178,0.4); }
+.btn-secondary { background:transparent; border-color:var(--nd-border); color:var(--nd-text-secondary); }
+.btn-secondary:hover { border-color:var(--nd-cyan); color:var(--nd-text-primary); }
+.btn-lg { padding:14px 28px; font-size:14px; }
+.btn-sm { padding:6px 14px; font-size:10px; }
+.w-full { width:100%; }
+
+.section-title { font-family:var(--nd-font-display); font-size:28px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:24px; background:var(--theme-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.section-sub { font-size:14px; color:var(--theme-muted); margin-bottom:32px; font-family:var(--nd-font-body); max-width:600px; }
+
+.price-card { background:var(--theme-surface,var(--nd-bg-panel)); border:1px solid var(--theme-border,var(--nd-border)); border-radius:var(--nd-radius-lg); padding:28px 24px; text-align:center; transition:all 0.3s; }
+.price-card.featured { border-color:var(--theme-accent,var(--nd-cyan)); box-shadow:0 0 30px var(--theme-glow); position:relative; }
+.price-card.featured::before { content:'BEST VALUE'; position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--theme-gradient); color:#fff; font-family:var(--nd-font-mono); font-size:9px; font-weight:700; padding:3px 14px; border-radius:999px; letter-spacing:1px; }
+.price-amount { font-family:var(--nd-font-tech); font-size:42px; font-weight:700; color:var(--theme-text); }
+.price-period { font-size:12px; color:var(--theme-muted); margin-bottom:20px; }
+.price-features { list-style:none; text-align:left; margin:20px 0; }
+.price-features li { padding:6px 0; font-size:13px; color:var(--nd-text-secondary); display:flex; align-items:center; gap:8px; }
+.price-features li::before { content:'>'; font-family:var(--nd-font-mono); color:var(--theme-accent,var(--nd-cyan)); font-weight:700; }
+
+.back-link { position:fixed; top:16px; left:20px; z-index:100; font-family:var(--nd-font-mono); font-size:11px; color:var(--nd-text-muted); text-decoration:none; padding:8px 14px; border:1px solid var(--nd-border); border-radius:var(--nd-radius-md); background:var(--theme-surface,var(--nd-bg-panel)); backdrop-filter:blur(12px); transition:all 0.2s; }
+.back-link:hover { border-color:var(--nd-cyan); color:var(--nd-cyan); }
+</style>
+</head>
+<body>
+<a href="index.html" class="back-link">&larr; Back to Dashboard</a>
+<main style="max-width:1100px;margin:0 auto;padding:60px 40px">
+  <h1 class="section-title" style="text-align:center">Pricing</h1>
+  <p class="section-sub" style="text-align:center;margin:0 auto 48px">Flexible plans for every production workflow.</p>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+    <div class="price-card">
+      <div style="font-family:var(--nd-font-tech);font-size:14px;font-weight:600;color:var(--theme-muted);margin-bottom:12px;letter-spacing:1px">STARTER</div>
+      <div class="price-amount">$19</div>
+      <div class="price-period">per month</div>
+      <ul class="price-features">
+        <li>Single track analysis</li>
+        <li>Basic metrics</li>
+        <li>HTML reports</li>
+        <li>Email support</li>
+      </ul>
+      <button class="btn btn-secondary w-full">Get Started</button>
+    </div>
+    <div class="price-card featured">
+      <div style="font-family:var(--nd-font-tech);font-size:14px;font-weight:600;color:var(--theme-accent,var(--nd-cyan));margin-bottom:12px;letter-spacing:1px">PRO</div>
+      <div class="price-amount">$49</div>
+      <div class="price-period">per month</div>
+      <ul class="price-features">
+        <li>Unlimited analysis</li>
+        <li>Reference matching</li>
+        <li>Batch processing</li>
+        <li>One-click FFmpeg repairs</li>
+        <li>A/B testing</li>
+        <li>Priority support</li>
+      </ul>
+      <button class="btn btn-primary w-full">Start Free Trial</button>
+    </div>
+    <div class="price-card">
+      <div style="font-family:var(--nd-font-tech);font-size:14px;font-weight:600;color:var(--theme-muted);margin-bottom:12px;letter-spacing:1px">STUDIO</div>
+      <div class="price-amount">$149</div>
+      <div class="price-period">per month</div>
+      <ul class="price-features">
+        <li>Everything in Pro</li>
+        <li>Album consistency</li>
+        <li>Streaming previews</li>
+        <li>Team collaboration</li>
+        <li>API access</li>
+        <li>Dedicated support</li>
+      </ul>
+      <button class="btn btn-secondary w-full">Contact Sales</button>
+    </div>
+  </div>
+</main>
+</body>
+</html>

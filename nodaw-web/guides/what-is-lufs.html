@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>What is LUFS? Complete Guide to Loudness Units</title><meta name="description" content="Complete guide to LUFS: what it means, how streaming platforms use it, how to measure your mix, and target loudness levels for Spotify, Apple Music, YouTube."><link rel="canonical" href="https://myaiplug.github.io/coproducer/guides/what-is-lufs.html"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;700&family=Manrope:wght@400;700&display=swap" rel="stylesheet"><style>:root{--bg:#020617;--surface:rgba(15,23,42,0.92);--border:rgba(51,65,85,0.5);--cyan:#22d3ee;--emerald:#10b981;--text:#e2e8f0;--muted:#64748b;--mono:'JetBrains Mono',monospace;--tech:'Rajdhani',sans-serif;--body:'Manrope',sans-serif;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:var(--body);background:var(--bg);color:var(--text);padding:60px 24px;max-width:800px;margin:0 auto;line-height:1.8;}h1{font-family:var(--tech);font-size:32px;margin-bottom:8px;}h2{font-family:var(--tech);font-size:22px;margin:40px 0 12px;color:var(--cyan);}p{font-size:15px;color:#cbd5e1;margin-bottom:16px;}.meta{color:var(--muted);font-family:var(--mono);font-size:12px;margin-bottom:32px;}.highlight{padding:16px 20px;background:var(--surface);border-left:3px solid var(--cyan);border-radius:4px;margin:20px 0;}code{font-family:var(--mono);font-size:13px;background:rgba(34,211,238,0.1);padding:2px 6px;border-radius:3px;}.tag{display:inline-block;padding:2px 10px;border-radius:999px;background:rgba(16,185,129,0.12);color:var(--emerald);font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;}table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin:20px 0;}th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);}th{color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:0.5px;}.back{color:var(--cyan);text-decoration:none;font-family:var(--mono);font-size:12px;}</style></head><body>
+<a href="../" class="back">&larr; Back to CoProducer</a>
+<div class="tag">Beginner Guide</div>
+<h1>What is LUFS? The Complete Guide</h1>
+<p class="meta">Updated June 2026 &middot; 8 min read</p>
+<p>If you've ever uploaded a song to Spotify and thought "why is it quieter than everything else?" — you've experienced LUFS in action.</p>
+<p><strong>LUFS</strong> stands for <strong>Loudness Units relative to Full Scale</strong>. It's the international standard (ITU-R BS.1770) for measuring how loud audio sounds to the human ear. Unlike peak level (dBFS), LUFS accounts for how our ears perceive loudness across different frequencies.</p>
+
+<h2>Why LUFS Matters</h2>
+<p>Every major streaming platform uses LUFS to normalize playback. This means:</p>
+<ul style="padding-left:20px;margin-bottom:16px">
+<li><strong>Spotify</strong> targets -14 LUFS (but doesn't penalize quieter masters)</li>
+<li><strong>Apple Music</strong> targets -16 LUFS (Sound Check)</li>
+<li><strong>YouTube</strong> targets -14 LUFS</li>
+<li><strong>Amazon Music</strong> targets -14 LUFS</li>
+<li><strong>TIDAL</strong> targets -14 LUFS</li>
+</ul>
+
+<div class="highlight"><strong>Key insight:</strong> If you master to -14 LUFS but your reference track is at -8 LUFS, your track will sound quieter in an A/B comparison — even though both will play at similar perceived volume on streaming platforms.</div>
+
+<h2>How CoProducer Measures LUFS</h2>
+<p>CoProducer uses <strong>pyloudnorm</strong> (the industry-standard Python implementation of ITU-R BS.1770-4) to measure integrated LUFS. This is the same algorithm used by professional metering plugins like iZotope Insight and NUGEN Audio VisLM.</p>
+<p>If pyloudnorm is not available, CoProducer falls back to an RMS-based approximation (dB RMS - 3 dB offset). This is less accurate but still useful for relative comparisons.</p>
+
+<h2>Target LUFS by Platform</h2>
+<table><tr><th>Platform</th><th>Target LUFS</th><th>True Peak Ceiling</th><th>Notes</th></tr>
+<tr><td>Spotify</td><td>-14</td><td>-1 dBTP</td><td>Does not penalize quieter masters</td></tr>
+<tr><td>Apple Music</td><td>-16</td><td>-1 dBTP</td><td>Sound Check enabled by default</td></tr>
+<tr><td>YouTube</td><td>-14</td><td>-1 dBTP</td><td>Accepts wide range</td></tr>
+<tr><td>Amazon Music</td><td>-14</td><td>-2 dBTP</td><td>Stricter peak limit</td></tr>
+<tr><td>TIDAL</td><td>-14</td><td>-1 dBTP</td><td>Master quality authenticates</td></tr>
+</table>
+
+<h2>Common LUFS Myths</h2>
+<p><strong>Myth: Louder is better.</strong> Not for streaming. Platforms normalize loudness anyway. Crushing your dynamics for loudness will just make your track sound flat compared to a well-balanced master.</p>
+<p><strong>Myth: -14 LUFS is mandatory.</strong> Not quite. Platforms will turn down louder tracks to match their target. A track mastered to -8 LUFS will simply play back at -14 LUFS (attenuated by 6 dB). The real cost is <em>dynamic range</em>, not loudness.</p>
+<p><strong>Myth: LUFS is the only metric that matters.</strong> No. True peak, dynamic range, stereo width, phase correlation, and spectral balance all matter for professional quality.</p>
+
+<div class="highlight"><strong>Pro tip:</strong> Use CoProducer's Reference Match feature to compare your LUFS against a commercial reference track. CoProducer will show you the exact LUFS difference and recommend gain staging adjustments.</div>
+
+<p style="margin-top:40px"><a href="https://github.com/myaiplug/coproducer" style="display:inline-block;padding:12px 24px;border-radius:8px;background:#164e63;border:1px solid #06b6d4;color:#ecfeff;font-family:var(--mono);font-size:12px;font-weight:700;text-decoration:none">Download CoProducer Free</a></p>
+</body></html>
