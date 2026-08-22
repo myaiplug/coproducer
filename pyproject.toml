@@ -1,0 +1,344 @@
+[project]
+name = "coproducer-core-analyzer"
+version = "3.1.0"
+description = "CoProducer Core Analyzer - professional audio analysis with traceable metrics using pyloudnorm, librosa, mutagen, and ffprobe"
+requires-python = "==3.11.*"
+dependencies = [
+    "numpy>=1.24.0,<2.0.0",
+    "scipy>=1.10.0",
+    "soundfile>=0.12.1",
+    "audioread>=3.0.0",
+    "librosa>=0.10.0,<0.11.0",
+    "pyloudnorm>=0.1.1",
+    "mutagen>=1.47.0",
+]
+
+[project.scripts]
+nodaw = "nodaw.cli:main"
+
+[build-system]
+requires = [
+    "setuptools>=68",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "app" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["app"]
+include = ["nodaw*"]
+exclude = ["tests*"]
+
+# -------------------------------------------------------------------
+# Ruff linting and formatting
+# -------------------------------------------------------------------
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["app", "tests"]
+
+extend-exclude = [
+    ".venv",
+    "venv",
+    "env",
+    "build",
+    "dist",
+    "__pycache__",
+    ".git",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".hypothesis",
+    "node_modules",
+    "downloaded_models",
+    "model_files",
+    "checkpoints",
+    "outputs",
+    "exports",
+    "reports",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",       # pycodestyle errors
+    "F",       # Pyflakes
+    "W",       # pycodestyle warnings
+    "I",       # import sorting
+    "UP",      # Python syntax upgrades
+    "B",       # flake8-bugbear
+    "SIM",     # simplification suggestions
+    "C4",      # comprehension improvements
+    "RUF",     # Ruff-specific rules
+    "PERF",    # performance problems
+    "PIE",     # miscellaneous cleanup
+    "ARG",     # unused function arguments
+]
+
+ignore = [
+    "E501",    # Ruff formatter handles line wrapping
+    "B008",    # allow function calls in defaults where intentionally used
+    "SIM108",  # do not force ternary expressions
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ARG001",
+    "ARG002",
+]
+"app/nodaw/__init__.py" = [
+    "F401",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["nodaw"]
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+skip-magic-trailing-comma = false
+docstring-code-format = true
+docstring-code-line-length = 100
+
+# -------------------------------------------------------------------
+# Pytest
+# -------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]
+
+python_classes = [
+    "Test*",
+]
+
+python_functions = [
+    "test_*",
+]
+
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--tb=short",
+]
+
+markers = [
+    "unit: fast isolated tests",
+    "integration: tests involving files, FFmpeg, models, or multiple components",
+    "slow: tests that take significant time",
+    "gpu: tests requiring CUDA",
+    "audio: tests using audio fixtures",
+]
+
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:librosa.*",
+    "ignore::DeprecationWarning:torch.*",
+    "ignore::DeprecationWarning:transformers.*",
+]
+
+# -------------------------------------------------------------------
+# Coverage
+# -------------------------------------------------------------------
+
+[tool.coverage.run]
+branch = true
+source = ["nodaw"]
+relative_files = true
+
+omit = [
+    "tests/*",
+    "build/*",
+    "dist/*",
+    "app/nodaw/__main__.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+precision = 1
+
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "@overload",
+]
+
+[tool.coverage.html]
+directory = "reports/coverage-html"
+
+[tool.coverage.xml]
+output = "reports/coverage.xml"
+
+# -------------------------------------------------------------------
+# Mypy
+# -------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.11"
+files = ["app/nodaw"]
+
+pretty = true
+show_error_codes = true
+show_error_context = true
+show_column_numbers = true
+
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+warn_return_any = true
+
+check_untyped_defs = true
+no_implicit_optional = true
+strict_equality = true
+
+ignore_missing_imports = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+exclude = [
+    "^\\.venv/",
+    "^venv/",
+    "^env/",
+    "^build/",
+    "^dist/",
+    "^tests/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "librosa.*",
+    "pyloudnorm.*",
+    "mutagen.*",
+    "soundfile.*",
+    "audioread.*",
+]
+ignore_missing_imports = true
+
+# -------------------------------------------------------------------
+# Bandit
+# -------------------------------------------------------------------
+
+[tool.bandit]
+exclude_dirs = [
+    ".venv",
+    "venv",
+    "env",
+    "tests",
+    "build",
+    "dist",
+    "__pycache__",
+    "node_modules",
+    "downloaded_models",
+    "model_files",
+    "checkpoints",
+    "outputs",
+    "exports",
+    "reports",
+]
+
+# Do not globally skip B101.
+# Production assertions should remain visible to Bandit.
+skips = []
+
+# -------------------------------------------------------------------
+# Vulture
+# -------------------------------------------------------------------
+
+[tool.vulture]
+paths = [
+    "app/nodaw",
+]
+
+exclude = [
+    ".venv/",
+    "venv/",
+    "env/",
+    "build/",
+    "dist/",
+    "tests/",
+]
+
+min_confidence = 80
+sort_by_size = true
+
+# -------------------------------------------------------------------
+# Deptry
+# -------------------------------------------------------------------
+
+[tool.deptry]
+exclude = [
+    ".venv",
+    "venv",
+    "env",
+    "build",
+    "dist",
+    "tests",
+    "reports",
+]
+
+[tool.deptry.per_rule_ignores]
+DEP002 = [
+    "audioread",
+]
+
+# -------------------------------------------------------------------
+# Optional dependency groups
+# -------------------------------------------------------------------
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+    "pyright",
+    "pytest>=8.0",
+    "pytest-cov",
+    "pytest-xdist",
+    "pytest-timeout",
+    "hypothesis",
+    "bandit",
+    "pip-audit",
+    "pre-commit",
+    "vulture",
+    "deptry",
+]
+
+ai = [
+    "torch",
+    "torchaudio",
+    "transformers",
+    "accelerate",
+    "safetensors",
+    "faster-whisper",
+    "onnx",
+    "onnxruntime-gpu",
+]
+
+audio-extra = [
+    "pedalboard",
+    "noisereduce",
+    "pydub",
+    "soxr",
+    "resampy",
+    "PyWavelets",
+    "ffmpeg-python",
+]
+
+all = [
+    "coproducer-core-analyzer[dev,ai,audio-extra]",
+]

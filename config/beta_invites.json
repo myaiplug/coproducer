@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "updated_at": "2026-08-02T16:55:05+00:00",
+  "invites": [
+    {
+      "email": "owner@nodaw.local",
+      "code_hash": "60909017e6ef6177f98e6831782597db50eb0964aee9432f7c179bff11e661bf",
+      "code_hint": "59",
+      "created_at": "2026-08-02T08:40:42+00:00",
+      "note": "dev-seed",
+      "used": true,
+      "used_at": "2026-08-02T08:40:56+00:00",
+      "invite_id": "28bc36f9f066081b",
+      "bound_email": "owner@nodaw.local"
+    },
+    {
+      "email": "keymaker-test@example.com",
+      "code_hash": "f7300ebbc6228cb81cc3cdcf304cabe18a9cea05c7cee7863e63cf296caeeacb",
+      "code_hint": "53",
+      "created_at": "2026-08-02T12:25:36+00:00",
+      "note": "gui-smoke",
+      "used": false,
+      "used_at": null,
+      "invite_id": "055ed36686f10339"
+    },
+    {
+      "email": "keymaker-test2@example.com",
+      "code_hash": "3a0c842db604f179a94a4b1a23c3032bcaddc2e2898b258a45622ece6d77a432",
+      "code_hint": "83",
+      "created_at": "2026-08-02T12:25:36+00:00",
+      "note": "",
+      "used": false,
+      "used_at": null,
+      "invite_id": "06fa55c4f074dd94"
+    },
+    {
+      "email": "bjutz89@gmail.com",
+      "code_hash": "7e574340bdec755b80624c5f86f3e99448dd9ba6f8fbe6bb96c1eb53d38f91f3",
+      "code_hint": "53",
+      "created_at": "2026-08-02T12:26:52+00:00",
+      "note": "bigdog",
+      "used": false,
+      "used_at": null,
+      "invite_id": "839f7ff258b13022"
+    },
+    {
+      "email": "thebeatmobb@gmail.com",
+      "code_hash": "d3c4df94c6b8ec2350c087502484ec2e98f25d8747dec35a501a7a3a12985157",
+      "code_hint": "77",
+      "created_at": "2026-08-02T16:55:05+00:00",
+      "note": "bzb",
+      "used": false,
+      "used_at": null,
+      "invite_id": "b178f339cf629c47"
+    }
+  ]
+}

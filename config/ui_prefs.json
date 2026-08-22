@@ -1,0 +1,21 @@
+{
+  "output_folder": "C:/Users/Gaming/Music/CoProducer",
+  "repair_options": {
+    "loudnorm": true,
+    "true_peak_limit": true,
+    "highpass": true,
+    "soft_compress": true,
+    "de_ess_presence": false,
+    "air_shelf": true,
+    "bass_trim": true,
+    "fade_edges": false,
+    "silence_trim": false,
+    "mono_safe": true,
+    "resample_48k": true,
+    "normalize_peak": true
+  },
+  "convert_format": "mp3",
+  "convert_formats": [
+    "mp3"
+  ]
+}

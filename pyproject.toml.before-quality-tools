@@ -1,0 +1,28 @@
+[project]
+name = "coproducer-core-analyzer"
+version = "3.1.0"
+description = "CoProducer Core Analyzer - professional audio analysis with traceable metrics (pyloudnorm + librosa + mutagen + ffprobe)"
+requires-python = "==3.11.*"
+dependencies = [
+    "numpy>=1.24.0,<2.0.0",
+    "scipy>=1.10.0",
+    "soundfile>=0.12.1",
+    "audioread>=3.0.0",
+    "librosa>=0.10.0,<0.11.0",
+    "pyloudnorm>=0.1.1",
+    "mutagen>=1.47.0"
+]
+
+[project.scripts]
+nodaw = "nodaw.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "app"}
+
+[tool.setuptools.packages.find]
+where = ["app"]
+

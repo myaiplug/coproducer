@@ -1,0 +1,40 @@
+{
+  "brand": "NoDAW Audio Quality Analyzer PRO",
+  "supported_extensions": [".wav", ".mp3", ".flac", ".m4a", ".aac", ".ogg", ".opus", ".aiff", ".aif"],
+  "analysis": {
+    "target_lufs": -14.0,
+    "true_peak_ceiling_dbtp": -1.0,
+    "minimum_sample_rate_hz": 44100,
+    "spectral_workers": 3,
+    "waveform_points": 180,
+    "spectral_bands_hz": {
+      "sub_bass": [20, 60],
+      "bass": [60, 150],
+      "low_mid": [150, 400],
+      "mid": [400, 1200],
+      "presence": [1200, 4000],
+      "high": [4000, 10000],
+      "air": [10000, 18000]
+    }
+  },
+  "previews": {
+    "duration_seconds": 30,
+    "codec_profiles": [
+      {"name": "MP3 320 kbps", "extension": ".mp3", "codec": "libmp3lame", "args": ["-b:a", "320k"]},
+      {"name": "AAC 256 kbps", "extension": ".m4a", "codec": "aac", "args": ["-b:a", "256k"]},
+      {"name": "Opus 160 kbps", "extension": ".opus", "codec": "libopus", "args": ["-b:a", "160k"]}
+    ]
+  },
+  "streaming_profiles": {
+    "Spotify": {"target_lufs": -14.0, "true_peak_dbtp": -1.0},
+    "Apple Music": {"target_lufs": -16.0, "true_peak_dbtp": -1.0},
+    "YouTube": {"target_lufs": -14.0, "true_peak_dbtp": -1.0},
+    "Amazon Music": {"target_lufs": -14.0, "true_peak_dbtp": -2.0},
+    "TIDAL": {"target_lufs": -14.0, "true_peak_dbtp": -1.0}
+  },
+  "licensing": {
+    "billing_url": "https://nodaw-entitlements-staging.onrender.com",
+    "gumroad_product_id": "Yw3XiCVjGTjBDshyoO91Wg=="
+  }
+}
+

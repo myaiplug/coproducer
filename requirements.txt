@@ -1,0 +1,29 @@
+# CoProducer Core Analyzer - Pinned dependencies for Python 3.11
+# Target runtime: Python 3.11 (locked; do not use 3.12 for Essentia compatibility)
+# Core: ffmpeg/ffprobe (bundled in installer) + these Python packages
+
+numpy>=1.24.0,<2.0.0
+scipy>=1.10.0
+soundfile>=0.12.1
+audioread>=3.0.0
+librosa>=0.10.0,<0.11.0
+pyloudnorm>=0.1.1
+mutagen>=1.47.0
+
+# High-quality offline repair (Phase 1 beta)
+pedalboard>=0.9.0
+
+# High-fidelity PortAudio preview (Home / A/B / Studio LiveFX)
+# Never use QMediaPlayer for mix preview — WMF resamples and stutters.
+sounddevice>=0.4.6
+
+# Desktop GUI
+PySide6>=6.6.0,<7.0.0
+
+# Optional / Advanced MIR (not required for base install):
+#   pip install essentia
+# Essentia has known friction on some Windows + newer Python combos.
+
+# Note: All scores and metrics are computed from measured values.
+# No simulated / placeholder scores.
+

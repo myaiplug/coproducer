@@ -1,0 +1,25 @@
+CoProducer 1.0.0-beta
+=====================
+
+One install. Everything included.
+
+This Setup packages:
+
+  • CoProducer desktop app (no Python install required)
+  • Audio engine (loudness, peaks, stereo, spectrum, scoring)
+  • Pedalboard high-quality offline repair
+  • FFmpeg / FFprobe for convert, trim, and codecs
+  • Themes, Studio Player, Reference A/B, History & Favorites
+  • User guide and beta docs (offline)
+
+Requirements:
+
+  • Windows 10 or 11 (64-bit)
+  • ~500 MB free disk space
+  • Speakers or headphones for playback
+
+After install, open CoProducer from the Desktop or Start Menu.
+No black console window — only the app UI.
+
+Private beta: use the invite email + code you received.
+(Local testers may use the owner invite from the beta guide.)

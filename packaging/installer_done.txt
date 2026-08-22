@@ -1,0 +1,23 @@
+Installation complete.
+
+What to do next
+---------------
+1. Launch CoProducer from the Desktop shortcut or Start Menu.
+2. Drop a mix (WAV / MP3 / FLAC / M4A …) onto the dashboard.
+3. Review the score, metrics, and repair suggestions.
+4. Use Repair, Convert, Tone Sculpt EQ, and A/B as needed.
+
+Folders (inside the install directory)
+--------------------------------------
+  reports\     — HTML / JSON / TXT analysis reports
+  exports\     — repairs, converts, EQ previews, trims
+  input\       — optional drop folders
+  logs\        — crash and diagnostic logs
+  docs\        — user guide
+
+Uninstall
+---------
+Windows Settings → Apps → CoProducer → Uninstall
+or Start Menu → CoProducer → Uninstall.
+
+Thanks for testing CoProducer.

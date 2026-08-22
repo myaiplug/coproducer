@@ -1,0 +1,31 @@
+# History / assistant artifacts
+.aider*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Inno Setup uninstaller leftovers at repo root
+unins000.exe
+unins000.dat
+
+# Runtime inputs & generated outputs (never ship these)
+input/
+logs/
+reports/
+exports/*
+!exports/proof_golive/
+
+# Build artifacts
+packaging/build/
+packaging/dist/
+packaging/output/*.exe
+*.iss.bak
+
+# Separate repo, already pushed: github.com/myaiplug/nodaw-billing-service
+billing-service/

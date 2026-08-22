@@ -1,0 +1,11 @@
+{
+  "activated": true,
+  "email": "33@nodaw.com",
+  "activated_at": "2026-08-02T08:40:56+00:00",
+  "invite_id": "28bc36f9f066081b",
+  "product": "CoProducer",
+  "channel": "v1-beta",
+  "migrated_to_v2": true,
+  "migrated_at": "2026-08-07T15:08:50+00:00",
+  "migrated_email": "33@nodaw.com"
+}
