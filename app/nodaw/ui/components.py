@@ -2607,7 +2607,7 @@ class BottomMetricsBar(QFrame):
             ("Loudness", "LUFS", "--"),
             ("True Peak", "dBTP", "--"),
             ("Loudness Range", "LU", "--"),
-            ("Peak", "dBFS", "--"),
+            ("Sample Peak", "dBFS", "--"),
             ("RMS", "dBFS", "--"),
             ("Crest", "dB", "--"),
         ]
@@ -2638,7 +2638,8 @@ class BottomMetricsBar(QFrame):
         self._tiles["Loudness"].set_value(_f(lm.get("integrated_lufs"), "LUFS"))
         self._tiles["True Peak"].set_value(_f(lm.get("true_peak_dbtp"), "dBTP"))
         self._tiles["Loudness Range"].set_value(_f(lm.get("loudness_range_lu"), "LU"))
-        self._tiles["Peak"].set_value(_f(m.get("peak_dbfs"), "dBFS"))
+        sp = lm.get("sample_peak_dbfs")
+        self._tiles["Sample Peak"].set_value(_f(sp if sp is not None else m.get("peak_dbfs"), "dBFS"))
         self._tiles["RMS"].set_value(_f(m.get("rms_dbfs"), "dBFS"))
         self._tiles["Crest"].set_value(_f(m.get("crest_factor"), ""))
 

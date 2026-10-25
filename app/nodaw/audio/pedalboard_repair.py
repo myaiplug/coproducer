@@ -80,12 +80,9 @@ def _measure_lufs(audio: np.ndarray, sr: int) -> float | None:
     try:
         meter = pyln.Meter(sr)
         y = _as_n_ch(audio)
-        # Mono downmix for stable integrated loudness on multi-channel
-        if y.shape[1] > 1:
-            mono = np.mean(y, axis=1)
-        else:
-            mono = y[:, 0]
-        val = meter.integrated_loudness(mono)
+        # BS.1770: K-weighted power summed across channels (no downmix; a mono
+        # downmix reads ~3 LU low on stereo and cancels anti-phase content).
+        val = meter.integrated_loudness(y if y.shape[1] > 1 else y[:, 0])
         if val is None or not math.isfinite(val):
             return None
         return round(float(val), 2)
@@ -97,6 +94,16 @@ def _peak_linear(audio: np.ndarray) -> float:
     if audio.size == 0:
         return 0.0
     return float(np.max(np.abs(audio)))
+
+
+def _true_peak_db(audio: np.ndarray) -> float:
+    """BS.1770-4 true peak (4x oversampled, per channel, max) in dBTP."""
+    if audio.size == 0:
+        return -120.0
+    from .r128 import true_peak_per_channel_dbtp
+
+    per_ch = true_peak_per_channel_dbtp(_as_n_ch(audio))
+    return max(per_ch) if per_ch else _to_db(_peak_linear(audio))
 
 
 def _load_audio(path: Path) -> tuple[np.ndarray, int]:
@@ -183,7 +190,7 @@ def apply_pedalboard_repair(
     try:
         audio, sr = _load_audio(src)
         in_lufs = _measure_lufs(audio, sr)
-        in_tp = _to_db(_peak_linear(audio))
+        in_tp = _true_peak_db(audio)
 
         # Process chain step-by-step so LUFS gain is measured accurately
         rendered = np.asarray(audio, dtype=np.float32)
@@ -222,7 +229,7 @@ def apply_pedalboard_repair(
 
         rendered = np.asarray(rendered, dtype=np.float32)
         # Soft ceiling only if still over (avoid crushing already-limited audio)
-        peak = _peak_linear(rendered)
+        peak = 10 ** (_true_peak_db(rendered) / 20.0)
         limit_lin = 10 ** (float(tp_ceiling_db) / 20.0)
         if peak > limit_lin * 1.02:
             rendered = rendered * (limit_lin / peak)
@@ -230,7 +237,7 @@ def apply_pedalboard_repair(
 
         _write_wav(dst, rendered, sr)
         out_lufs = _measure_lufs(rendered, sr)
-        out_tp = _to_db(_peak_linear(rendered))
+        out_tp = _true_peak_db(rendered)
 
         return PedalboardRepairResult(
             ok=True,

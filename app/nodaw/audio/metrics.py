@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from ..core.models import AudioInfo, AudioMetrics, LoudnessMetrics, TrackAnalysis
+from . import r128
 from .ffmpeg import FFmpeg
 
 NUMBER = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
@@ -62,6 +63,10 @@ class MetricsAnalyzer:
         if peak is not None and peak >= -0.01:
             clipped = max(1, int(round(stats["peak_count"] or 1)))
 
+        if loudness.sample_peak_dbfs is None and peak is not None:
+            # astats "Overall" peak = hottest channel sample peak (dBFS)
+            loudness.sample_peak_dbfs = peak
+
         metrics = AudioMetrics(
             loudness=loudness,
             peak_dbfs=peak,
@@ -100,6 +105,18 @@ class MetricsAnalyzer:
         )
 
     def _loudness(self, path: Path) -> LoudnessMetrics:
+        # EBU R128 ebur128 filter on all channels (true peak oversampled per
+        # channel); loudnorm analysis pass kept as a fallback.
+        measured = r128.measure_ebur128_ffmpeg(path)
+        if measured is not None and measured.integrated_lufs is not None:
+            return LoudnessMetrics(
+                integrated_lufs=measured.integrated_lufs,
+                loudness_range_lu=measured.loudness_range_lu,
+                true_peak_dbtp=measured.true_peak_dbtp,
+                threshold_lufs=measured.threshold_lufs,
+                sample_peak_dbfs=measured.sample_peak_dbfs,
+                true_peak_method=measured.method,
+            )
         result = self.ffmpeg.run_checked(
             [
                 "ffmpeg",
@@ -126,6 +143,7 @@ class MetricsAnalyzer:
             loudness_range_lu=_rounded(values.get("input_lra")),
             true_peak_dbtp=_rounded(values.get("input_tp")),
             threshold_lufs=_rounded(values.get("input_thresh")),
+            true_peak_method="ffmpeg-loudnorm",
         )
 
     def _astats(self, path: Path, prefix: str | None = None) -> dict[str, float | None]:

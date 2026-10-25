@@ -11,7 +11,7 @@
 | Dimension | Grade | Score | Notes |
 |-----------|-------|-------|--------|
 | **Integrated loudness (LUFS)** | **A−** | 9/10 | pyloudnorm ITU-R BS.1770-style; solid for offline files |
-| **True peak** | **C+** | 6.5/10 | 4× linear oversample estimate — better than sample peak, **not** full BS.1770-4 TP |
+| **True peak** | **A−** | 9/10 | BS.1770-4 Annex 2: 4× polyphase oversample per channel at native rate, max = dBTP; ffmpeg `ebur128=peak=true` cross-check (was C+: mono downmix + 44.1k resample) |
 | **Sample peak / RMS / crest** | **A−** | 9/10 | Direct math on decoded PCM; depends on decode path |
 | **Clipping detection** | **C** | 6/10 | Near-FS sample count; misses soft clips & intersample overs after limiters |
 | **LRA / dynamics** | **B−** | 7/10 | pyloudnorm LRA when available; crest-based DR is a proxy |
@@ -58,12 +58,13 @@ File → ffprobe metadata
 
 ### P0 — Measurement correctness (do first)
 
-- [ ] **True peak (ITU-grade)**  
+- [x] **True peak (ITU-grade)** — `app/nodaw/audio/r128.py`, tests in `tests/test_true_peak.py`  
   - Replace linear 4× interp with `scipy.signal.resample_poly` (4× or 8×) or ffmpeg `ebur128` / `astats` true peak.  
   - Report **sample peak** and **true peak** as separate fields always.  
   - **Lib:** scipy (already available via stack) or ffmpeg filter JSON.
 
 - [ ] **Stereo-preserving analysis path**  
+  - [x] Level path (LUFS, LRA, true peak, sample peak, clipping) is stereo-preserving at native rate, per channel.  
   - Keep L/R through metrics when `channels >= 2`.  
   - Real mid/side energy, correlation, width, mono fold-down check.  
   - **Lib:** numpy; optional `soundfile` multi-channel.

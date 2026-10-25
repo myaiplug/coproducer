@@ -14,7 +14,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from .models import Finding, TrackAnalysis
+from .models import AudioMetrics, Finding, TrackAnalysis
 
 LOSSY_CODECS = {"mp3", "aac", "vorbis", "opus", "wmapro", "wmav2", "mp2", "mp3float"}
 
@@ -143,6 +143,8 @@ def evaluate_track(
             )
 
     # --- True peak / sample peak ------------------------------------------
+    # Scored against the dBTP ceiling (streaming target -1 dBTP). Sample peak
+    # (dBFS) is reported separately and only used if true peak is missing.
     true_peak = metrics.loudness.true_peak_dbtp
     peak = metrics.peak_dbfs
     if true_peak is None and peak is None:
@@ -166,8 +168,9 @@ def evaluate_track(
             add(
                 sev,
                 "Unsafe true peak",
-                f"Measured {hot:.2f} dBTP; ceiling is {ceiling:.2f} dBTP "
-                f"(tolerance {TP_EPSILON_DB:.2f} dB).",
+                f"Measured {hot:.2f} dBTP (BS.1770-4 true peak, worst channel); "
+                f"ceiling is {ceiling:.2f} dBTP (tolerance {TP_EPSILON_DB:.2f} dB)."
+                + _sample_peak_note(metrics),
                 "Use a true-peak limiter before lossy encoding.",
                 pen,
             )
@@ -412,3 +415,16 @@ def streaming_compatibility(track: TrackAnalysis, settings: dict[str, Any]) -> l
             }
         )
     return results
+
+
+def _sample_peak_note(metrics: AudioMetrics) -> str:
+    sp = metrics.loudness.sample_peak_dbfs
+    if sp is None:
+        sp = metrics.peak_dbfs
+    tp = metrics.loudness.true_peak_dbtp
+    if sp is None:
+        return ""
+    note = f" Sample peak {sp:.2f} dBFS"
+    if tp is not None and tp - sp >= 0.1:
+        note += f"; {tp - sp:.2f} dB of intersample overshoot"
+    return note + "."

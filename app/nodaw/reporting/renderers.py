@@ -71,13 +71,40 @@ def spectral_chart(values: dict[str, float | None]) -> str:
     return "<div class='spectral-chart'>" + "".join(bars) + "</div>"
 
 
+def _per_channel_suffix(values: Any, unit: str) -> str:
+    if not isinstance(values, list) or len(values) < 2:
+        return ""
+    names = ["L", "R", "C", "LFE", "Ls", "Rs"]
+    parts = []
+    for i, v in enumerate(values):
+        name = names[i] if len(values) <= 6 and i < len(names) else f"ch{i + 1}"
+        parts.append(f"{name} {display(v, unit)}")
+    return " (" + ", ".join(parts) + ")"
+
+
+def _true_peak_display(loudness: dict[str, Any]) -> str:
+    return display(loudness.get("true_peak_dbtp"), " dBTP") + _per_channel_suffix(
+        loudness.get("true_peak_dbtp_per_channel"), ""
+    )
+
+
+def _sample_peak_display(loudness: dict[str, Any], metrics: dict[str, Any]) -> str:
+    value = loudness.get("sample_peak_dbfs")
+    if value is None:
+        value = metrics.get("peak_dbfs")
+    return display(value, " dBFS") + _per_channel_suffix(
+        loudness.get("sample_peak_dbfs_per_channel"), ""
+    )
+
+
 def track_section(track: dict[str, Any]) -> str:
     audio = track["audio"]
     metrics = track["metrics"]
     loudness = metrics["loudness"]
     cards = [
         ("Integrated LUFS", display(loudness.get("integrated_lufs"), " LUFS")),
-        ("True Peak", display(loudness.get("true_peak_dbtp"), " dBTP")),
+        ("True Peak (dBTP)", _true_peak_display(loudness)),
+        ("Sample Peak (dBFS)", _sample_peak_display(loudness, metrics)),
         ("Dynamic Range", display(metrics.get("dynamic_range_db"), " dB")),
         ("Stereo Width", display(metrics.get("stereo_width_percent"), "%")),
         ("Phase Correlation", display(metrics.get("phase_correlation"))),
@@ -246,7 +273,8 @@ def render_text(report: dict[str, Any]) -> str:
                 f"Codec: {audio.get('codec_name')}",
                 f"Sample rate: {display(audio.get('sample_rate_hz'), ' Hz')}",
                 f"Integrated LUFS: {display(loudness.get('integrated_lufs'), ' LUFS')}",
-                f"True peak: {display(loudness.get('true_peak_dbtp'), ' dBTP')}",
+                f"True peak (dBTP, BS.1770-4 4x): {_true_peak_display(loudness)}",
+                f"Sample peak (dBFS): {_sample_peak_display(loudness, metrics)}",
                 f"Dynamic range: {display(metrics.get('dynamic_range_db'), ' dB')}",
                 f"Stereo width: {display(metrics.get('stereo_width_percent'), '%')}",
                 f"Phase correlation: {display(metrics.get('phase_correlation'))}",

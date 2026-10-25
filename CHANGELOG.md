@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased - BS.1770-4 / EBU R128 true peak
+
+- True peak is now ITU-R BS.1770-4 Annex 2: 4x polyphase oversampling per channel at the
+  file's native sample rate, reported as dBTP (max) plus per-channel values.
+- Level metrics (integrated LUFS, LRA, true peak, sample peak, clip count) no longer use a
+  mono downmix resampled to 44.1 kHz. Stereo integrated loudness now sums channel power per
+  BS.1770 and reads up to ~3 LU higher than before on stereo material (matches ffmpeg
+  ebur128/loudnorm and streaming meters). Anti-phase content no longer cancels to silence.
+- FFmpeg `ebur128=peak=true` is used for integrated loudness / LRA when available and
+  its true peak is stored as a cross-check (`extra.true_peak.ffmpeg_ebur128_true_peak_dbtp`).
+- "Sample peak (dBFS)" is labeled separately from "True peak (dBTP)" in reports and UI.
+- Master export and the Pedalboard repair path measure true peak / LUFS per channel.
+
 ## 3.2.0 - 2026-06-29 - CoProducer Design System + Premium Desktop UI
 
 ### Design System (app/nodaw/ui/)
