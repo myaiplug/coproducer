@@ -5,7 +5,9 @@ Python 3.11 locked.
 Uses:
 - ffprobe for technical metadata + tags
 - soundfile / numpy for low-level DSP
-- pyloudnorm for ITU-R BS.1770 integrated LUFS + true peak
+- FFmpeg ebur128 (EBU R128) + pyloudnorm fallback for ITU-R BS.1770-4
+  integrated LUFS / LRA, measured on all channels at the native rate
+- native 4x polyphase BS.1770-4 true peak per channel (see audio/r128.py)
 - librosa for MIR / spectral features
 - mutagen for musical metadata read/write + embedding AI analysis tags
 
@@ -18,12 +20,13 @@ from __future__ import annotations
 import json
 import math
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 import librosa
 import numpy as np
-import pyloudnorm as pyln
+import pyloudnorm as pyln  # noqa: F401  (hard dependency; used via r128.measure_native)
 
 # Core third-party (pinned in requirements)
 import soundfile as sf
@@ -37,6 +40,7 @@ except Exception:
     HAS_ESSENTIA = False
 
 from ..core.models import AudioInfo, AudioMetrics, LoudnessMetrics, TrackAnalysis
+from . import r128
 
 
 class AnalyzerError(RuntimeError):
@@ -143,6 +147,27 @@ def load_audio_channels(path: Path, sr: int = 44100) -> tuple[np.ndarray, np.nda
             stereo = y[:, :2]
             mono = np.mean(y, axis=1).astype(np.float32)
         return mono, stereo if stereo is not None and stereo.shape[1] >= 2 else None, file_sr
+
+
+def load_native(path: Path) -> tuple[np.ndarray, int]:
+    """
+    Decode every channel at the file's own sample rate: ``(n, channels)`` float32.
+
+    Used for loudness, sample peak and true peak so nothing is downmixed or
+    resampled before measurement (resampling moves sample positions and
+    changes sample peak; downmixing cancels/averages per-channel peaks).
+    """
+    try:
+        data, file_sr = sf.read(str(path), always_2d=True, dtype="float32")
+        return data, int(file_sr)
+    except Exception:
+        y, file_sr = librosa.load(str(path), sr=None, mono=False)
+        y = np.asarray(y, dtype=np.float32)
+        if y.ndim == 1:
+            y = y[:, None]
+        else:
+            y = y.T  # librosa returns (channels, samples)
+        return y, int(file_sr)
 
 
 def compute_noise_floor_dbfs(y: np.ndarray, sr: int) -> float:
@@ -260,97 +285,54 @@ def compute_waveform_envelope(y: np.ndarray, points: int = 180) -> list[float]:
 
 def compute_true_peak_dbtp(y: np.ndarray, oversample: int = 4) -> float:
     """
-    True-peak estimate (dBTP) via polyphase oversampling when scipy is available.
+    ITU-R BS.1770-4 true peak (dBTP): 4x polyphase oversampling per channel.
 
-    Falls back to linear 4× interp, then sample peak. This is substantially more
-    accurate than linear np.interp for intersample peaks (ITU-style TP proxy).
+    Accepts mono ``(n,)`` or multichannel ``(n, ch)`` audio at its native
+    sample rate and returns the max over channels. Do **not** pass a downmix:
+    averaging channels hides per-channel (and anti-phase) peaks.
     """
-    if y is None or len(y) == 0:
+    if y is None or np.asarray(y).size == 0:
         return -120.0
-    y64 = y.astype(np.float64, copy=False)
-    sample_pk = float(np.max(np.abs(y64)))
-    tp = sample_pk
-    if len(y64) > 64 and oversample > 1:
-        try:
-            from scipy.signal import resample_poly
-
-            # Cap work on very long files: process in overlapping blocks
-            block = 480_000  # ~10s @ 48k
-            if len(y64) <= block:
-                y_os = resample_poly(y64, oversample, 1)
-                tp = float(np.max(np.abs(y_os)))
-            else:
-                hop = block - 2048
-                mx = sample_pk
-                for i in range(0, len(y64), hop):
-                    chunk = y64[i : i + block]
-                    if len(chunk) < 64:
-                        continue
-                    y_os = resample_poly(chunk, oversample, 1)
-                    mx = max(mx, float(np.max(np.abs(y_os))))
-                tp = mx
-        except Exception:
-            try:
-                n = len(y64)
-                t_old = np.linspace(0.0, 1.0, n, endpoint=False)
-                t_new = np.linspace(0.0, 1.0, n * oversample, endpoint=False)
-                y4 = np.interp(t_new, t_old, y64)
-                tp = float(np.max(np.abs(y4)))
-            except Exception:
-                tp = sample_pk
-    return round(20 * math.log10(max(tp, 1e-12)), 2)
+    per_ch = r128.true_peak_per_channel_dbtp(y, oversample=oversample)
+    return max(per_ch) if per_ch else -120.0
 
 
 def compute_loudness_pyloudnorm(y: np.ndarray, sr: int) -> LoudnessMetrics:
-    """Use pyloudnorm (ITU-R BS.1770) for accurate integrated LUFS + improved true peak.
-    Includes fallback for edge cases (short tones, very quiet, silence).
+    """BS.1770-4 loudness + true peak from samples (no FFmpeg).
+
+    ``y`` may be mono ``(n,)`` or native multichannel ``(n, ch)``; channels are
+    kept separate (pyloudnorm sums K-weighted channel powers, true peak is
+    measured per channel).
     """
-    if len(y) < sr // 4:  # very short clip
-        # Use simple stats
-        if len(y) == 0:
-            return LoudnessMetrics(None, None, None, None)
-        pk = 20 * math.log10(max(np.max(np.abs(y)), 1e-12))
-        return LoudnessMetrics(None, None, round(pk, 2), None)
+    if y is None or np.asarray(y).size == 0:
+        return LoudnessMetrics(None, None, None, None)
+    return _loudness_from_measurement(r128.measure_native(y, sr))
 
-    try:
-        meter = pyln.Meter(sr)
-        # Prefer stereo-aware path when y is mono — still correct for integrated
-        integrated = meter.integrated_loudness(y)
-        lra = None
-        try:
-            lra = meter.loudness_range(y)
-        except Exception:
-            pass
 
-        true_pk = compute_true_peak_dbtp(y, oversample=4)
-        sample_pk = round(20 * math.log10(max(float(np.max(np.abs(y))), 1e-12)), 2)
-
-        integ = (
-            round(integrated, 2) if integrated is not None and math.isfinite(integrated) else None
-        )
-
-        return LoudnessMetrics(
-            integrated_lufs=integ,
-            loudness_range_lu=round(lra, 2) if lra is not None and math.isfinite(lra) else None,
-            true_peak_dbtp=true_pk,
-            threshold_lufs=None,
-            sample_peak_dbfs=sample_pk,
-        )
-    except Exception:
-        # Absolute fallback using numpy
-        if len(y) == 0:
-            return LoudnessMetrics(None, None, None, None)
-        pk = compute_true_peak_dbtp(y, oversample=4)
-        sample_pk = round(20 * math.log10(max(float(np.max(np.abs(y))), 1e-12)), 2)
-        return LoudnessMetrics(None, None, pk, None, sample_peak_dbfs=sample_pk)
+def _loudness_from_measurement(m: r128.R128Measurement) -> LoudnessMetrics:
+    return LoudnessMetrics(
+        integrated_lufs=m.integrated_lufs,
+        loudness_range_lu=m.loudness_range_lu,
+        true_peak_dbtp=m.true_peak_dbtp,
+        threshold_lufs=m.threshold_lufs,
+        sample_peak_dbfs=m.sample_peak_dbfs,
+        true_peak_dbtp_per_channel=list(m.true_peak_dbtp_per_channel),
+        sample_peak_dbfs_per_channel=list(m.sample_peak_dbfs_per_channel),
+        true_peak_method=m.method,
+    )
 
 
 def compute_technical_faults(
     y: np.ndarray,
     sr: int,
     stereo: np.ndarray | None = None,
+    native: np.ndarray | None = None,
 ) -> dict[str, Any]:
-    """Clipping, DC, silence, mono compatibility - always numeric when audio exists."""
+    """Clipping, DC, silence, mono compatibility - always numeric when audio exists.
+
+    ``native`` (``(n, ch)`` at the file's own rate) is used for clip / over
+    counting when given, so a clipped channel is not diluted by a downmix.
+    """
     results: dict[str, Any] = {}
 
     if y is None or len(y) == 0:
@@ -362,33 +344,40 @@ def compute_technical_faults(
         results["phase_correlation"] = 1.0
         return results
 
-    # Sample-level near-FS count
-    clipped = int(np.sum(np.abs(y) >= 0.998))
-    # Intersample overs: count oversampled peaks above ~0.99 (soft-clip / TP abuse)
+    if native is not None and np.asarray(native).size:
+        chans = np.asarray(native)
+        chans = chans[:, None] if chans.ndim == 1 else chans
+    else:
+        chans = np.asarray(y)[:, None]
+    n_frames = chans.shape[0]
+    # Sample-level near-FS count (worst channel)
+    abs_ch = np.abs(chans)
+    clipped = int(np.max(np.sum(abs_ch >= 0.998, axis=0)))
+    # Intersample overs: oversampled peaks above ~0.99 on the hottest channel
     try:
         from scipy.signal import resample_poly
 
-        # Short probe on loudest region for speed
-        abs_y = np.abs(y.astype(np.float64))
+        hot = chans[:, int(np.argmax(np.max(abs_ch, axis=0)))].astype(np.float64)
+        abs_y = np.abs(hot)
         if len(abs_y) > 8192:
             # windows around global peak
             peak_i = int(np.argmax(abs_y))
             half = 8192
             lo = max(0, peak_i - half)
             hi = min(len(abs_y), peak_i + half)
-            region = y[lo:hi].astype(np.float64)
+            region = hot[lo:hi]
         else:
-            region = y.astype(np.float64)
+            region = hot
         if len(region) >= 64:
             os_peak = resample_poly(region, 4, 1)
             intersample = int(np.sum(np.abs(os_peak) >= 0.99))
             # Scale to full-file estimate proportionally (capped)
-            scale = max(1.0, len(y) / max(1, len(region)))
-            clipped = max(clipped, int(min(intersample * scale, len(y))))
+            scale = max(1.0, n_frames / max(1, len(region)))
+            clipped = max(clipped, int(min(intersample * scale, n_frames)))
     except Exception:
         pass
     results["clipped_samples"] = clipped
-    results["clipped_ratio"] = round(clipped / max(1, len(y)), 6)
+    results["clipped_ratio"] = round(clipped / max(1, n_frames), 6)
 
     dc = float(np.mean(y.astype(np.float64)))
     results["dc_offset"] = round(dc, 6)
@@ -558,32 +547,52 @@ def analyze_file(path: Path, generate_previews: bool = False) -> TrackAnalysis:
     probe = run_ffprobe(path)
     audio_info = extract_audio_info(path, probe)
 
-    y, stereo, sr = load_audio_channels(path, sr=44100)
+    # Native-rate, all-channel samples for every level measurement
+    # (loudness, true peak, sample peak, RMS, clipping, stereo imaging).
+    try:
+        native, native_sr = load_native(path)
+    except Exception:
+        native, native_sr = None, None
+    if native is not None and native.size == 0:
+        native, native_sr = None, None
+
+    # 44.1 kHz mono stream only for MIR / spectral / waveform features.
+    sr = 44100
+    if native is not None:
+        y = np.mean(native, axis=1).astype(np.float32)
+        if native_sr != sr:
+            y = librosa.resample(y, orig_sr=native_sr, target_sr=sr).astype(np.float32)
+    else:
+        y, _stereo_44k, sr = load_audio_channels(path, sr=44100)
+        if y is not None and len(y):
+            native = (_stereo_44k if _stereo_44k is not None else y[:, None]).astype(np.float32)
+            native_sr = sr
     if y is None or len(y) == 0:
         # Absolute fallback - still return structured zeros that mean silence
         y = np.zeros(44100, dtype=np.float32)
-        stereo = None
         sr = 44100
+        native, native_sr = y[:, None], sr
+    stereo = native[:, :2] if native.shape[1] >= 2 else None
 
-    loud = compute_loudness_pyloudnorm(y, sr)
-    # Guarantee loudness fields when audio exists (fallbacks if pyloudnorm fails edge cases)
+    meas = r128.measure_r128(path, native, native_sr)
+    loud = _loudness_from_measurement(meas)
+    # Guarantee loudness fields when audio exists (fallbacks for edge cases)
     if loud.true_peak_dbtp is None:
-        pk = float(np.max(np.abs(y)))
-        loud = LoudnessMetrics(
-            integrated_lufs=loud.integrated_lufs,
-            loudness_range_lu=loud.loudness_range_lu,
-            true_peak_dbtp=round(20 * math.log10(max(pk, 1e-12)), 2),
-            threshold_lufs=loud.threshold_lufs,
+        loud = replace(loud, true_peak_dbtp=compute_true_peak_dbtp(native))
+    if loud.sample_peak_dbfs is None:
+        sp = r128.sample_peak_per_channel_dbfs(native)
+        loud = replace(
+            loud, sample_peak_dbfs=max(sp) if sp else None, sample_peak_dbfs_per_channel=sp
         )
     if loud.integrated_lufs is None:
-        rms = float(np.sqrt(np.mean(y.astype(np.float64) ** 2)))
-        # Rough LUFS-like proxy only when true integrated fails (still a real number)
-        approx = round(20 * math.log10(max(rms, 1e-12)) - 0.691, 2)
-        loud = LoudnessMetrics(
+        # Channel-summed mean square (BS.1770 G=1 for L/R), unweighted, ungated:
+        # rough LUFS-like proxy only when true integrated fails (still a real number)
+        ms = float(np.sum(np.mean(native[:, :5].astype(np.float64) ** 2, axis=0)))
+        approx = round(10 * math.log10(max(ms, 1e-24)) - 0.691, 2)
+        loud = replace(
+            loud,
             integrated_lufs=approx,
             loudness_range_lu=loud.loudness_range_lu if loud.loudness_range_lu is not None else 0.0,
-            true_peak_dbtp=loud.true_peak_dbtp,
-            threshold_lufs=loud.threshold_lufs,
         )
     if loud.loudness_range_lu is None:
         # Frame loudness variance proxy
@@ -598,15 +607,10 @@ def analyze_file(path: Path, generate_previews: bool = False) -> TrackAnalysis:
             )
         else:
             lra_proxy = 0.0
-        loud = LoudnessMetrics(
-            integrated_lufs=loud.integrated_lufs,
-            loudness_range_lu=lra_proxy,
-            true_peak_dbtp=loud.true_peak_dbtp,
-            threshold_lufs=loud.threshold_lufs,
-        )
+        loud = replace(loud, loudness_range_lu=lra_proxy)
 
     phase_corr, stereo_width = compute_stereo_imaging(stereo)
-    faults = compute_technical_faults(y, sr, stereo=stereo)
+    faults = compute_technical_faults(y, sr, stereo=stereo, native=native)
     faults["phase_correlation"] = phase_corr
 
     lib = compute_librosa_features(y, sr)
@@ -630,10 +634,12 @@ def analyze_file(path: Path, generate_previews: bool = False) -> TrackAnalysis:
             if lib["energy_balance"].get(k) is None:
                 lib["energy_balance"][k] = 0.0
 
-    peak_dbfs = round(float(20 * math.log10(max(float(np.max(np.abs(y))), 1e-12))), 2)
-    rms_dbfs = round(
-        float(20 * math.log10(max(float(np.mean(y.astype(np.float64) ** 2) ** 0.5), 1e-12))), 2
-    )
+    # Sample peak = hottest channel at native rate (never a downmix).
+    peak_dbfs = loud.sample_peak_dbfs
+    if peak_dbfs is None:
+        peak_dbfs = r128.lin_to_db(float(np.max(np.abs(native))))
+    # RMS = mean power across channels (equals channel RMS for dual-mono).
+    rms_dbfs = round(r128.lin_to_db(float(np.sqrt(np.mean(np.square(native, dtype=np.float64))))), 2)
     dyn = round(peak_dbfs - rms_dbfs, 2)
     crest = round(10 ** (dyn / 20.0), 2) if dyn is not None else 1.0
 
@@ -663,7 +669,23 @@ def analyze_file(path: Path, generate_previews: bool = False) -> TrackAnalysis:
             "technical_faults": faults,
             "librosa": lib,
             "has_essentia": HAS_ESSENTIA,
-            "channels_analyzed": 2 if stereo is not None else 1,
+            "channels_analyzed": int(native.shape[1]),
+            "analysis_sample_rate_hz": int(native_sr),
+            "true_peak": {
+                "standard": "ITU-R BS.1770-4 / EBU R128",
+                "method": loud.true_peak_method,
+                "oversample": r128.TRUE_PEAK_OVERSAMPLE,
+                "true_peak_dbtp": loud.true_peak_dbtp,
+                "true_peak_dbtp_per_channel": list(loud.true_peak_dbtp_per_channel),
+                "sample_peak_dbfs": loud.sample_peak_dbfs,
+                "sample_peak_dbfs_per_channel": list(loud.sample_peak_dbfs_per_channel),
+                "intersample_over_db": (
+                    round(loud.true_peak_dbtp - loud.sample_peak_dbfs, 2)
+                    if loud.true_peak_dbtp is not None and loud.sample_peak_dbfs is not None
+                    else None
+                ),
+                "ffmpeg_ebur128_true_peak_dbtp": meas.ffmpeg_true_peak_dbtp,
+            },
         },
     )
     return ta

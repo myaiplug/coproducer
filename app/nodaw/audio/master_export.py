@@ -109,7 +109,7 @@ def master_export(
             status(f"gain {gain_db:+.1f} dB to {target_lufs:.0f} LUFS…")
         audio = audio * float(10.0 ** (gain_db / 20.0))
 
-        peak_db = compute_true_peak_dbtp(audio.mean(axis=1), oversample=4)
+        peak_db = compute_true_peak_dbtp(audio, oversample=4)  # per channel, no downmix
         if peak_db > tpt:
             if HAS_PEDALBOARD:
                 if status:
@@ -139,7 +139,7 @@ def master_export(
             result["error"] = "write failed"
             return result
 
-        final_tp = compute_true_peak_dbtp(audio.mean(axis=1), oversample=4)
+        final_tp = compute_true_peak_dbtp(audio, oversample=4)  # per channel, no downmix
         result.update(
             {
                 "ok": True,

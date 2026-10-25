@@ -27,6 +27,10 @@ class LoudnessMetrics:
     true_peak_dbtp: float | None
     threshold_lufs: float | None
     sample_peak_dbfs: float | None = None  # raw sample peak (always reported when known)
+    # BS.1770-4 per-channel detail (empty when unknown / legacy path)
+    true_peak_dbtp_per_channel: list[float] = field(default_factory=list)
+    sample_peak_dbfs_per_channel: list[float] = field(default_factory=list)
+    true_peak_method: str | None = None
 
 
 @dataclass(slots=True)
